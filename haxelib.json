@@ -1,0 +1,25 @@
+{
+    "name": "stx_stream",
+    "license": "MIT",
+    "tags": [
+        "cross",
+        "functional"
+    ],
+    "description": "Compact selection of powertools. No real overlap with common libraries, so safe to use in the global scope",
+    "contributors": [
+        "0b1kn00b"
+    ],
+    "releasenote": "see CHANGELOG.md",
+    "version": "0.1.0",
+    "url": "https://github.com/ohmrun/stx_stream",
+    "dependencies": {
+        "tink_core"     : "git:https://github.com/haxetink/tink_core.git",
+        "hx3compat"     : "git:https://github.com/HaxeFoundation/hx3compat.git",
+        "stx_pico"      : "git:https://github.com/ohmrun/stx_pico.git",
+        "stx_nano"      : "git:https://github.com/ohmrun/stx_nano.git",
+        "stx_log"       : "git:https://github.com/ohmrun/stx_log.git",
+        "stx_test"      : "git:https://github.com/ohmrun/stx_test.git",
+        "stx_pkg"       : "git:https://github.com/ohmrun/stx_pkg.git"
+    },
+    "classPath": "src/main/haxe"
+}
