@@ -1,14 +1,15 @@
 package stx;
 
-using stx.stream.Logging;
-
 import tink.core.Callback;
 import tink.core.Disposable;
 import tink.core.Signal in TinkSignal;
 
+using stx.stream.Logging;
+
+
 typedef StreamDef<T,E> = Signal<Chunk<T,E>>;
 
-@:using(stx.nano.Stream.StreamLift)
+@:using(stx.Stream.StreamLift)
 @:forward(handle) abstract Stream<T,E>(StreamDef<T,E>) from StreamDef<T,E>{
   public function new(self) this = self;
   static public function lift<T,E>(self:StreamDef<T,E>):Stream<T,E> return new Stream(self);
@@ -56,6 +57,7 @@ typedef StreamDef<T,E> = Signal<Chunk<T,E>>;
     );
   }
   static public function unit<T,E>():Stream<T,E>{
+    __.log().debug("unit");
     return lift(
       Signal.make(
         (cb:Chunk<T,E>->Void) -> {
@@ -82,42 +84,45 @@ class StreamLift{
     return Stream.lift(self);
   }
   static public function seq<T,E>(self:Stream<T,E>,that:Stream<T,E>):Stream<T,E>{
+    __.log().debug('seq');
     var ended = false;
     return lift(Signal.make(
       (cb) -> {
         var cbII = null;
         var cbI  = self.handle(
-          (chunk) -> chunk.fold(
+          (chunk) -> {
+            __.log().debug('log:lhs');
+            chunk.fold(
               val -> cb(Val(val)),
               end -> __.option(end).fold(
                 err -> cb(End(err)),
                 ()  -> {
-                  var event = null;
-                      event = haxe.MainLoop.add(
-                        () -> {
-                          event.stop();
-                          cbII = that.handle(
-                            (chunk) -> chunk.fold(
-                              (val) -> {
-                                if(!ended){
-                                  cb(Val(val));
-                                }else{
-                                  cb(End(__.fault().any("already ended")));
-                                }
-                              },
-                              (end) -> {
-                                ended = true;
-                                cb(End(end));
-                              },
-                              ()    -> {}
-                            )
-                          );
-                        }
+                  __.log().debug('log:lhs:end()');
+                  //__.log().debug('log:gap: ${haxe.MainLoop.hasEvents()}');
+                  cbII = that.handle(
+                      (chunk) -> {
+                        chunk.fold(
+                        (val) -> {
+                          if(!ended){
+                            cb(Val(val));
+                          }else{
+                            cb(End(__.fault().any("already ended")));
+                          }
+                        },
+                        (end) -> {
+                          __.log().debug('rhs:end');
+                          ended = true;
+                          cb(End(end));
+                        },
+                        ()    -> {}
                       );
+                    }
+                  );
                 }
               ),
               () -> {}
-            )
+            );
+          }
         );
         return () -> {
           __.option(cbI).defv(new SimpleLink(()->{})).cancel();
@@ -133,12 +138,12 @@ class StreamLift{
     return lift(
       new TinkSignal(
         (cb) -> {
-          __.log().debug(id);
+          __.log().debug('$id');
           self.handle(
             (chunk) -> chunk.fold(
               val -> {
                 if(!cancelled){
-                  __.log().debug(val);
+                  __.log().debug('$val');
                   __.log().debug("ADDED STREAM");
                   streams.push(fn(val));
                 }
@@ -154,7 +159,7 @@ class StreamLift{
                   __.log().debug('SEQ ${streams.length}');
                   streams.lfold1(seq).defv(Stream.unit()).handle(
                     chunk -> {
-                      __.log().debug(chunk);
+                      __.log().debug('$chunk');
                       cb(chunk);
                     }
                   );

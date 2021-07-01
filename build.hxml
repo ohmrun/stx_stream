@@ -1,4 +1,4 @@
--cp src
+-cp src/main/haxe
 -D analyzer-optimize
 -main Main
 -lib stx_log
@@ -6,4 +6,6 @@
 -lib stx_nano
 -lib stx_pico
 -lib stx_pkg
+-lib haxe-concurrent
+
 --interp
