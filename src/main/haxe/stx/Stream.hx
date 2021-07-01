@@ -6,6 +6,10 @@ import tink.core.Signal in TinkSignal;
 
 using stx.stream.Logging;
 
+typedef Work                                    = stx.stream.Work;
+typedef Bang                                    = stx.stream.Work.Bang;
+typedef Cycle                                   = stx.stream.Cycle;
+typedef CYCLED                                  = stx.stream.Cycle.CYCLED;
 
 typedef StreamDef<T,E> = Signal<Chunk<T,E>>;
 
