@@ -95,7 +95,7 @@ class StreamLift{
         var cbII = null;
         var cbI  = self.handle(
           (chunk) -> {
-            __.log().debug('log:lhs');
+            __.log().trace('log:lhs');
             chunk.fold(
               val -> cb(Val(val)),
               end -> __.option(end).fold(

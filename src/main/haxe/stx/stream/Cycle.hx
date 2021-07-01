@@ -34,7 +34,7 @@ class CycleLift{
   static public function lift(self:CycleDef):Cycle return Cycle.lift(self);
 
   static public function seq(self:Cycle,that:Cycle):Cycle{
-    //trace('seq setup');
+    __.log().trace('seq setup');
     return lift(
       () -> {
         return try{
@@ -90,7 +90,7 @@ class CycleLift{
         );
   }
   static public function crunch(self:Cycle){
-    //trace('crunching');
+    __.log().trace('crunching');
     try{
       self().handle(
         (x) -> {
@@ -98,7 +98,7 @@ class CycleLift{
         }
       );
     }catch(e:CYCLED){
-      //trace("cycled");
+      __.log().trace("cycled");
     }catch(e:haxe.Exception){
       throw e;
     }

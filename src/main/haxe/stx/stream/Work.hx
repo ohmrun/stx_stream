@@ -52,16 +52,16 @@ class WorkLift{
   static public function lift(self:WorkDef):Work return Work.lift(self);
 
   static public function seq(self:Work,that:Work):Work{
-    //trace('work seq setup $self $that');
+    __.log().trace('work seq setup $self $that');
     return lift(
       self.prj().zip(that.prj()).map(
         tp -> tp.decouple(
           (lhs,rhs) -> {
-            //trace('$lhs $rhs');
+            __.log().trace('$lhs $rhs');
             return Future.inSequence([lhs,rhs]).map(
               arr -> Cycle.lift(
                 () -> {
-                  //trace('l and r');
+                  __.log().trace('l and r');
                   return __.option(arr[0]).defv(Cycle.ZERO).seq(__.option(arr[1]).defv(Cycle.ZERO));
                 }
               )
@@ -73,7 +73,7 @@ class WorkLift{
     );
   }
   static public function par(self:Work,that:Work):Work{
-    //trace('work par setup');
+    __.log().trace('work par setup');
     return lift(
       self.prj().zip(that.prj()).map(
         tp -> tp.decouple(
