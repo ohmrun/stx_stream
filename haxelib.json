@@ -20,7 +20,8 @@
         "stx_nano"      : "git:https://github.com/ohmrun/stx_nano.git",
         "stx_log"       : "git:https://github.com/ohmrun/stx_log.git",
         "stx_test"      : "git:https://github.com/ohmrun/stx_test.git",
-        "stx_pkg"       : "git:https://github.com/ohmrun/stx_pkg.git"
+        "stx_pkg"       : "git:https://github.com/ohmrun/stx_pkg.git",
+        "stx_coroutine" : "git:https://github.com/ohmrun/coroutine.git"
     },
     "classPath": "src/main/haxe"
 }

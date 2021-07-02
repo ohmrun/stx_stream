@@ -61,7 +61,7 @@ class WorkLift{
             return Future.inSequence([lhs,rhs]).map(
               arr -> Cycle.lift(
                 () -> {
-                  __.log().trace('l and r');
+                  __.log().trace('l:${arr[0]} and r:${arr[1]}');
                   return __.option(arr[0]).defv(Cycle.ZERO).seq(__.option(arr[1]).defv(Cycle.ZERO));
                 }
               )

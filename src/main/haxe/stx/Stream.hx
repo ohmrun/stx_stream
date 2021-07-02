@@ -10,19 +10,25 @@ typedef Work                                    = stx.stream.Work;
 typedef Bang                                    = stx.stream.Work.Bang;
 typedef Cycle                                   = stx.stream.Cycle;
 typedef CYCLED                                  = stx.stream.Cycle.CYCLED;
+typedef Window<T,E>                             = stx.stream.Window<T,E>;
+typedef Buffer<T>                               = stx.stream.Buffer<T>;
 
-typedef StreamDef<T,E> = Signal<Chunk<T,E>>;
+typedef StreamDef<T,E>                          = Signal<Chunk<T,E>>;
 
 @:using(stx.Stream.StreamLift)
 @:forward(handle) abstract Stream<T,E>(StreamDef<T,E>) from StreamDef<T,E>{
   public function new(self) this = self;
   static public function lift<T,E>(self:StreamDef<T,E>):Stream<T,E> return new Stream(self);
   
+  //static public function trigger<T,E>():
   static public function fromArray<T,E>(self:Array<T>):Stream<T,E>{
     return lift(Signal.fromArray(self.map(Val).snoc(End())));
   }
   static public function fromFuture<T,E>(self:Future<T>):Stream<T,E>{
     return fromThunkFuture(() -> self);
+  }
+  public function window(?buffer:Buffer<Chunk<T,E>>):Stream<T,E>{
+    return lift(Window.make(this,buffer).toSignal());
   }
   static public function fromThunkFuture<T,E>(self:Void->Future<T>):Stream<T,E>{
     return lift(
@@ -88,20 +94,21 @@ class StreamLift{
     return Stream.lift(self);
   }
   static public function seq<T,E>(self:Stream<T,E>,that:Stream<T,E>):Stream<T,E>{
-    __.log().debug('seq');
+    var id        = __.uuid("xxxx");
+    __.log().trace('seq');
     var ended = false;
     return lift(Signal.make(
       (cb) -> {
         var cbII = null;
         var cbI  = self.handle(
           (chunk) -> {
-            __.log().trace('log:lhs');
+            __.log().trace('stream:${id} log:lhs ');
             chunk.fold(
               val -> cb(Val(val)),
               end -> __.option(end).fold(
                 err -> cb(End(err)),
                 ()  -> {
-                  __.log().debug('log:lhs:end()');
+                  __.log().debug('stream:${id} log:lhs:end()');
                   //__.log().debug('log:gap: ${haxe.MainLoop.hasEvents()}');
                   cbII = that.handle(
                       (chunk) -> {
@@ -114,7 +121,7 @@ class StreamLift{
                           }
                         },
                         (end) -> {
-                          __.log().debug('rhs:end');
+                          __.log().debug('stream:${id} rhs:end');
                           ended = true;
                           cb(End(end));
                         },
@@ -160,7 +167,7 @@ class StreamLift{
                   cb(End(err));
                 },
                 () -> {
-                  __.log().debug('SEQ ${streams.length}');
+                  __.log().debug('stream:${id} SEQ ${streams.length} ');
                   streams.lfold1(seq).defv(Stream.unit()).handle(
                     chunk -> {
                       __.log().debug('$chunk');
