@@ -16,7 +16,7 @@ class Main {
 			case 2 		: ['stx/stream','haxe/overrides'];
 			default 	: [];
 		}
-		var logger 					= stx.Logger.ZERO;
+		var logger 					= __.log().global;
 				logger.level	 	= TRACE;
 
 		for(include in includes){

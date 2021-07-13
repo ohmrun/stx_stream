@@ -6,13 +6,13 @@ class WindowTest extends TestCase{
     var stream  = Stream.lift(trigger.asSignal());
         stream.handle(
           (x) -> {
-            trace('all because I was here $x');
+            trace('Handler added to Stream before $x');
           }
         );
     var window  = stream.window();   
         window.handle(
           (x) -> {
-            trace('all because I was here window $x');
+            trace('Handler added to Window before $x');
           }
         );
     for(val in [1,2,3,4,5]){
@@ -20,7 +20,7 @@ class WindowTest extends TestCase{
     }
         window.handle(
           (x) -> {
-            trace('all because window $x');
+            trace('Handler added after $x');
           }
         );
         
