@@ -27,4 +27,20 @@ The way `Cycle` reports that it is finished is via throwing a special constant `
 
 `stx.stream.Work` is an `Option<Future<Cycle>>` (which might change to `Option<Cycle>`), but allows cases where the work is done to be factored out before the scheduler invocation `None + None = None`
 
+### Windowing
+
 The Windowing system `stream.window` is fully asyncrhonous, and by default keeps a full history of the values in memory. Overriding what the window returns and how is managed by a `stx.coroutine.Tunnel` which allows arbitrarily complex behaviours based on the input, and is integrated with `stx.Err`.
+
+### Execution
+
+Execution is started using `cycle.submit()` or `cycle.crunch()`. The latter attempts to complete execution in the current event loop frame .
+
+### Logging (stx.log)
+To read the logs, whitelist `stx/stream`, and set level to `TRACE` for tick data
+
+```haxe
+  function log_init(){
+    __.log().global.includes.push('stx/stream');
+    __.log().global.level = TRACE;
+  }
+```
