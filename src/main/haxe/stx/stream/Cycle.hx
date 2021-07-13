@@ -1,7 +1,5 @@
 package stx.stream;
 
-import hx.concurrent.executor.*;
-
 enum CYCLED{
   CYCLED;
 }
@@ -33,10 +31,6 @@ typedef CycleDef = Thunk<Future<Cycle>>;
 
 }
 class CycleLift{
-  static public var EXECUTOR(get,null):Executor;
-  static public function get_EXECUTOR(){
-    return __.option(EXECUTOR).def(() -> EXECUTOR = Executor.create(3));
-  }
   static public function lift(self:CycleDef):Cycle return Cycle.lift(self);
 
   static public function seq(self:Cycle,that:Cycle):Cycle{
@@ -81,46 +75,48 @@ class CycleLift{
   }
   static public function submit(self:Cycle){
     __.log().trace('cycle/submit');
-    var report = __.report();
-    function catcher(fn){
-      try{
-        fn();
-      }catch(err:Err<Dynamic>){
-        report = err.report();  
-      }catch(e:Dynamic){
-        report = __.report(f -> f.any('$e'));
-      }
-    }
-    EXECUTOR.submit(
-      () -> {
-        try{
-          __.log().trace('cycle:call');
-          self().handle(
-            function rec(x:Cycle){
-              catcher(
-                () -> {
+    var event : haxe.MainLoop.MainEvent = null;
+        event = haxe.MainLoop.add(
+          () -> {
+            try{
+              __.log().trace('cycle:call');
+              self().handle(
+                function rec(x:Cycle){
                   try{
                     __.log().trace('cycle:loop');
                     final next = x();
                     __.log().trace('cycle:loop:next $next');
-                    next.handle(
-                      (x) -> {
-                        EXECUTOR.submit(rec.bind(x),ONCE(0));
-                      }
-                    );
+                    next.handle(rec);
                   }catch(e:CYCLED){
                     __.log().trace('cycle:stop');
+                    event.isBlocking            = false;
+                    @:privateAccess event.next  = null;      
+                    event.stop();
+                    final has_events = haxe.MainLoop.hasEvents();
+                    __.log().debug('has_events $has_events $event');
+                  }catch(e:Dynamic){
+                    haxe.MainLoop.runInMainThread(
+                      () -> {
+                        event.stop();
+                        throw(e);
+                      }
+                    );
                   }
                 }
               );
+            }catch(e:CYCLED){
+              __.log().trace('cycle:stop');
+              event.stop();
+            }catch(e:Dynamic){
+              haxe.MainLoop.runInMainThread(
+                () -> {
+                  event.stop();
+                  throw(e);
+                }
+              );
             }
-          );
-        }catch(e:CYCLED){
-          __.log().trace('cycle:stop');
-        }
-      },
-      ONCE(0)
-    );
+          }
+        );
   }
   static public function crunch(self:Cycle){
     __.log().trace('crunching');
@@ -137,25 +133,3 @@ class CycleLift{
     }
   }
 }
-// class FutureScheduled<T> implements hx.concurrent.Future<T> {
-
-//   public var result(default, null):Null<FutureResult<T>>;
-
-//   public var onResult(default, set):(FutureResult<T>) -> Void;
-//   inline function set_onResult(fn:(FutureResult<T>) -> Void) {
-//      // immediately invoke the callback function in case a result is already present
-//      if (fn != null) {
-//         final result = this.result;
-//         switch(result) {
-//            case NONE(_):
-//            default: fn(result);
-//         }
-//      }
-//      return onResult = fn;
-//   }
-
-//   function new(ft:Future<T>) {
-//      onResult = null;
-//      result = FutureResult.NONE(this);
-//   }
-// }

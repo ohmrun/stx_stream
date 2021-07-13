@@ -18,11 +18,11 @@ class WindowTest extends TestCase{
     for(val in [1,2,3,4,5]){
       trigger.trigger(Val(val));
     }
-        // window.handle(
-        //   (x) -> {
-        //     trace('all because window $x');
-        //   }
-        // );
+        window.handle(
+          (x) -> {
+            trace('all because window $x');
+          }
+        );
         
   }
 }
