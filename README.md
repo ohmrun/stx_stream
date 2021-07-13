@@ -5,7 +5,7 @@ This is a possibly inifinite functional Stream with windowing based on coroutine
 Usage.
 
 ```haxe
-  //Based on `tink.core.Signal<Chunk<T,E>>`
+  //Based on `tink.core.Signal<stx.nano.Chunk<T,E>>`
   class Main{
     static public function main(){
       final stream = Stream.make(
