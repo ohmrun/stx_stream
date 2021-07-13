@@ -6,6 +6,6 @@ using stx.Pkg;
 
 class Logging{
   static public function log(wildcard:Wildcard){
-    return __.log().tag('haxe/overrides');
+    return __.log().tag(__.pkg());
   }
 }
