@@ -6,6 +6,7 @@ import tink.core.Signal in TinkSignal;
 
 using stx.stream.Logging;
 
+typedef Timeout                                 = stx.stream.Timeout;
 typedef Work                                    = stx.stream.Work;
 typedef Bang                                    = stx.stream.Work.Bang;
 typedef Cycle                                   = stx.stream.Cycle;
@@ -188,5 +189,15 @@ class StreamLift{
   }
   static public function next<T,E>(self:Stream<T,E>):Future<Chunk<T,E>>{
     return self.prj().nextTime();
+  }
+  static public function errata<T,E,EE>(self:Stream<T,E>,fn:Err<E>->Err<EE>):Stream<T,EE>{
+    return lift(self.prj().map(
+      chk -> chk.errata(fn)
+    ));
+  }
+  static public function errate<T,E,EE>(self:Stream<T,E>,fn:E->EE):Stream<T,EE>{
+    return lift(self.prj().map(
+      chk -> chk.errate(fn)
+    ));
   }
 }

@@ -74,7 +74,7 @@ class CycleLift{
     );
   }
   static public function submit(self:Cycle){
-    __.log().trace('cycle/submit');
+    __.log().info('cycle/submit');
     var event : haxe.MainLoop.MainEvent = null;
         event = haxe.MainLoop.add(
           () -> {
@@ -89,15 +89,24 @@ class CycleLift{
                     next.handle(rec);
                   }catch(e:CYCLED){
                     __.log().trace('cycle:stop');
-                    event.isBlocking            = false;
-                    @:privateAccess event.next  = null;      
+                    //event.isBlocking            = false;
+                    //@:privateAccess event.next  = null;      
                     event.stop();
                     final has_events = haxe.MainLoop.hasEvents();
                     __.log().debug('has_events $has_events $event');
+
+                    final pending   = @:privateAccess haxe.EntryPoint.pending.length;
+                    __.log().debug('has_pending $pending');
+
+                    final thread_count = @:privateAccess haxe.EntryPoint.threadCount;
+
+                    __.log().debug('has_pending $thread_count');
+                    
                   }catch(e:Dynamic){
+                    __.log().trace('cycle:quit $e');
+                    event.stop();
                     haxe.MainLoop.runInMainThread(
                       () -> {
-                        event.stop();
                         throw(e);
                       }
                     );
@@ -108,9 +117,9 @@ class CycleLift{
               __.log().trace('cycle:stop');
               event.stop();
             }catch(e:Dynamic){
+              __.log().trace('cycle:quit $e');
               haxe.MainLoop.runInMainThread(
                 () -> {
-                  event.stop();
                   throw(e);
                 }
               );
