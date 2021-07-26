@@ -100,7 +100,7 @@ class CycleLift{
 
                     final thread_count = @:privateAccess haxe.EntryPoint.threadCount;
 
-                    __.log().debug('has_pending $thread_count');
+                    __.log().debug('thread count $thread_count');
                     
                   }catch(e:Dynamic){
                     __.log().trace('cycle:quit $e');

@@ -1,0 +1,15 @@
+-cp src/main/haxe
+-D analyzer-optimize
+-D no-deprecation-warnings
+-main stx.stream.test.Issue1
+-lib haxe-concurrent
+-lib stx_log
+-lib stx_test
+-lib stx_nano
+-lib stx_pico
+-lib stx_fn
+-lib stx_pkg
+-lib stx_coroutine
+-lib haxe-concurrent
+
+--interp
