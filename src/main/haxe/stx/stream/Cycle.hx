@@ -34,16 +34,16 @@ class CycleLift{
   static public function lift(self:CycleDef):Cycle return Cycle.lift(self);
 
   static public function seq(self:Cycle,that:Cycle):Cycle{
-    __.log().trace('seq setup');
+    //__.log().trace('seq setup');
     return lift(
       () -> {
-        __.log().trace('seq call');
+        //__.log().trace('seq call');
         return try{
           final next = self();
-          __.log().trace('$next');
+          //__.log().trace('$next');
           next.map(seq.bind(_,that));
         }catch(e:CYCLED){
-          __.log().trace('seq:that $that');
+          //__.log().trace('seq:that $that');
           that;
         };
       } 
@@ -89,8 +89,6 @@ class CycleLift{
                     next.handle(rec);
                   }catch(e:CYCLED){
                     __.log().trace('cycle:stop');
-                    //event.isBlocking            = false;
-                    //@:privateAccess event.next  = null;      
                     event.stop();
                     final has_events = haxe.MainLoop.hasEvents();
                     __.log().debug('has_events $has_events $event');
@@ -127,18 +125,32 @@ class CycleLift{
           }
         );
   }
+  //TODO backoff algo
   static public function crunch(self:Cycle){
     __.log().trace('crunching');
-    try{
-      self().handle(
-        (x) -> {
-          crunch(x);
+    
+    function inner(self:Cycle){
+      var cont = true;
+      while(cont){
+        //__.log().trace('$cont $self');
+        if(self!=null){
+          __.log().trace('crunching:call');    
+          final call = self;
+          self = null;
+          try{
+            call().handle(
+              x -> { self = x; }
+            );
+          }catch(e:CYCLED){
+            __.log().trace("cycled");
+            cont = false;
+            break;
+          }catch(e:haxe.Exception){
+            throw e;
+          }
         }
-      );
-    }catch(e:CYCLED){
-      __.log().trace("cycled");
-    }catch(e:haxe.Exception){
-      throw e;
+      }
     }
+    inner(self);
   }
 }

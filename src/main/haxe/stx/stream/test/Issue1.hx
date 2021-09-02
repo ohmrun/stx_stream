@@ -8,7 +8,7 @@ using stx.Log;
 import stx.stream.Timeout;
 
 
-class Issue1 extends stx.pico.Clazz{
+class Issue1 extends TestCase{
   static public function main(){
     final logger = __.log().global;
           logger.includes.push("stx/stream");

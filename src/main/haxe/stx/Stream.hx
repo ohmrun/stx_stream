@@ -31,7 +31,7 @@ typedef StreamDef<T,E>                          = Signal<Chunk<T,E>>;
   public function window(?buffer:Buffer<Chunk<T,E>>):Stream<T,E>{
     return lift(Window.make(this,buffer).toSignal());
   }
-  static public function fromThunkFuture<T,E>(self:Void->Future<T>):Stream<T,E>{
+  static inline public function fromThunkFuture<T,E>(self:Void->Future<T>):Stream<T,E>{
     return lift(
       Signal.make(
         (cb) -> {
@@ -101,6 +101,7 @@ class StreamLift{
     return lift(Signal.make(
       (cb) -> {
         var cbII = null;
+        __.log().trace(_ -> _.pure(self));
         var cbI  = self.handle(
           (chunk) -> {
             __.log().trace('stream:${id} log:lhs ');
@@ -126,7 +127,9 @@ class StreamLift{
                           ended = true;
                           cb(End(end));
                         },
-                        ()    -> {}
+                        ()    -> {
+                          //TODO should I forward this?
+                        }
                       );
                     }
                   );
@@ -137,12 +140,17 @@ class StreamLift{
           }
         );
         return () -> {
-          __.option(cbI).defv(new SimpleLink(()->{})).cancel();
-          __.option(cbII).defv(new SimpleLink(()->{})).cancel();
+          for(link in __.option(cbI)){
+            link.cancel();
+          }
+          for(link in __.option(cbII)){
+            link.cancel();
+          }
         }
       }
     ));
   }
+  //TODO I'm not sure how to handle ordering in the substreams. Possibly for a subclass to handle with a LogicalClock.
   static public function flat_map<T,Ti,E>(self:Stream<T,E>,fn:T->Stream<Ti,E>){
     var cancelled = false;
     var streams   = [];
@@ -150,8 +158,9 @@ class StreamLift{
     return lift(
       new TinkSignal(
         (cb) -> {
-          __.log().debug('$id');
-          self.handle(
+          __.log().debug('$id $self');
+          var callbackI   = null;
+          final callback  = self.handle(
             (chunk) -> chunk.fold(
               val -> {
                 if(!cancelled){
@@ -163,13 +172,13 @@ class StreamLift{
               end -> __.option(end).fold(
                 err -> {
                   __.log().debug('CANCELLED $err');
-                  //cancelled = true;
+                  cancelled = true;
                   streams   = [];
                   cb(End(err));
                 },
                 () -> {
                   __.log().debug('stream:${id} SEQ ${streams.length} ');
-                  streams.lfold1(seq).defv(Stream.unit()).handle(
+                  callbackI = streams.lfold1(seq).defv(Stream.unit()).handle(
                     chunk -> {
                       __.log().debug('$chunk');
                       cb(chunk);
@@ -182,7 +191,14 @@ class StreamLift{
               }
             )
           );
-          return () -> {};
+          return () -> {
+            for(link in __.option(callback)){
+              link.cancel();
+            }
+            for(link in __.option(callbackI)){
+              link.cancel();
+            }  
+          };
         }
       )
     );
