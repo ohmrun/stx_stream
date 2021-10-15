@@ -132,7 +132,7 @@ class CycleLift{
     function inner(self:Cycle){
       var cont = true;
       while(cont){
-        //__.log().trace('$cont $self');
+        __.log().trace('$cont $self');
         if(self!=null){
           __.log().trace('crunching:call');    
           final call = self;
@@ -148,6 +148,9 @@ class CycleLift{
           }catch(e:haxe.Exception){
             throw e;
           }
+        }else{
+          break;//TODO who hands in a null here?
+          //throw 'Cycle handed null to run';
         }
       }
     }
