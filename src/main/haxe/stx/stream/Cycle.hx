@@ -7,7 +7,10 @@ typedef CycleDef = Thunk<Future<Cycle>>;
 
 @:using(stx.stream.Cycle.CycleLift)
 @:callable abstract Cycle(CycleDef) from CycleDef to CycleDef{
-  public function new(self:CycleDef) this = self;
+  public function new(self:CycleDef) {
+    __.assert().exists(self);
+    this = self;
+  }
   static public function lift(self:CycleDef):Cycle{
     return new Cycle(self);
   }
@@ -20,7 +23,12 @@ typedef CycleDef = Thunk<Future<Cycle>>;
     });
   }
   @:from static public function fromFutureCycle(self:Future<Cycle>):Cycle{
-    return lift(() -> self);
+    return lift(
+      () -> {
+        __.assert().exists(self);
+        return self;
+      }  
+    );
   }
   @:from static public function fromWork(self:Work):Cycle{
     return self.prj().fold(
@@ -34,16 +42,16 @@ class CycleLift{
   static public function lift(self:CycleDef):Cycle return Cycle.lift(self);
 
   static public function seq(self:Cycle,that:Cycle):Cycle{
-    //__.log().trace('seq setup');
+    //__.syslog().trace('seq setup');
     return lift(
       () -> {
-        //__.log().trace('seq call');
+        //__.syslog().trace('seq call');
         return try{
           final next = self();
-          //__.log().trace('$next');
+          //__.syslog().trace('$next');
           next.map(seq.bind(_,that));
         }catch(e:CYCLED){
-          //__.log().trace('seq:that $that');
+          //__.syslog().trace('seq:that $that');
           that;
         };
       } 
@@ -74,34 +82,34 @@ class CycleLift{
     );
   }
   static public function submit(self:Cycle){
-    __.log().info('cycle/submit');
+    __.syslog().info('cycle/submit');
     var event : haxe.MainLoop.MainEvent = null;
         event = haxe.MainLoop.add(
           () -> {
             try{
-              __.log().trace('cycle:call');
+              __.syslog().trace('cycle:call');
               self().handle(
                 function rec(x:Cycle){
                   try{
-                    __.log().trace('cycle:loop');
+                    __.syslog().trace('cycle:loop');
                     final next = x();
-                    __.log().trace('cycle:loop:next $next');
+                    __.syslog().trace('cycle:loop:next $next');
                     next.handle(rec);
                   }catch(e:CYCLED){
-                    __.log().trace('cycle:stop');
+                    __.syslog().trace('cycle:stop');
                     event.stop();
                     final has_events = haxe.MainLoop.hasEvents();
-                    __.log().debug('has_events $has_events $event');
+                    __.syslog().debug('has_events $has_events $event');
 
                     final pending   = @:privateAccess haxe.EntryPoint.pending.length;
-                    __.log().debug('has_pending $pending');
+                    __.syslog().debug('has_pending $pending');
 
                     final thread_count = @:privateAccess haxe.EntryPoint.threadCount;
 
-                    __.log().debug('thread count $thread_count');
+                    __.syslog().debug('thread count $thread_count');
                     
                   }catch(e:Dynamic){
-                    __.log().trace('cycle:quit $e');
+                    __.syslog().trace('cycle:quit $e');
                     event.stop();
                     haxe.MainLoop.runInMainThread(
                       () -> {
@@ -112,10 +120,10 @@ class CycleLift{
                 }
               );
             }catch(e:CYCLED){
-              __.log().trace('cycle:stop');
+              __.syslog().trace('cycle:stop');
               event.stop();
             }catch(e:Dynamic){
-              __.log().trace('cycle:quit $e');
+              __.syslog().trace('cycle:quit $e');
               haxe.MainLoop.runInMainThread(
                 () -> {
                   throw(e);
@@ -127,14 +135,14 @@ class CycleLift{
   }
   //TODO backoff algo
   static public function crunch(self:Cycle){
-    __.log().trace('crunching');
+    __.syslog().trace('crunching');
     
     function inner(self:Cycle){
       var cont = true;
       while(cont){
-        __.log().trace('$cont $self');
+        __.syslog().trace('$cont $self');
         if(self!=null){
-          __.log().trace('crunching:call');    
+          __.syslog().trace('crunching:call');    
           final call = self;
           self = null;
           try{
@@ -142,7 +150,7 @@ class CycleLift{
               x -> { self = x; }
             );
           }catch(e:CYCLED){
-            __.log().trace("cycled");
+            __.syslog().trace("cycled");
             cont = false;
             break;
           }catch(e:haxe.Exception){
