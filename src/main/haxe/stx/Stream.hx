@@ -119,7 +119,7 @@ class StreamLift{
                           if(!ended){
                             cb(Val(val));
                           }else{
-                            cb(End(__.fault().any("already ended")));
+                            cb(End(__.fault().external("already ended")));
                           }
                         },
                         (end) -> {
@@ -206,7 +206,7 @@ class StreamLift{
   static public function next<T,E>(self:Stream<T,E>):Future<Chunk<T,E>>{
     return self.prj().nextTime();
   }
-  static public function errata<T,E,EE>(self:Stream<T,E>,fn:Err<E>->Err<EE>):Stream<T,EE>{
+  static public function errata<T,E,EE>(self:Stream<T,E>,fn:Exception<E>->Exception<EE>):Stream<T,EE>{
     return lift(self.prj().map(
       chk -> chk.errata(fn)
     ));
