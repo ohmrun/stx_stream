@@ -17,6 +17,9 @@ typedef WorkDef = Option<Future<Cycle>>;
   private var self(get,never):Work;
   private function get_self():Work return lift(this);
 
+  static public inline function fromCycle(self:Cycle):Work{
+    return __.option(Future.irreversible(cb -> cb(self)));
+  }
   @:from static public function fromFutureWork(ft:Future<Work>):Work{
     return lift(Some(
       ft.flatMap(
