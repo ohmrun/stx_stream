@@ -1,0 +1,23 @@
+{
+  "build" : {
+    "-cp" : "src/main/haxe",
+    "-lib" : [
+      "stx_pico","stx_nano", "stx_ds", "stx_assert", "stx_fn", "stx_test", "stx_log","stx_log","stx_coroutine"
+    ],
+    "unit"  : {
+      "--macro" : [
+        "include('stx.Stream',true)",
+        "include('stx.stream',true)"
+      ],
+      "interp" : {
+        "--interp"  : true
+      }
+    },
+    "main" : {
+      "-main" : "Main",
+      "interp" : {
+        "--interp" : true
+      }
+    }
+  }
+}
