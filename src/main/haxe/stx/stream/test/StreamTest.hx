@@ -1,4 +1,4 @@
-package stx.stream;
+package stx.stream.test;
 
 class StreamTest extends Clazz{
 	public function test(){

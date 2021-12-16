@@ -146,7 +146,9 @@ class CycleLift{
           final call = self;
           self = null;
           try{
-            call().handle(
+            final result = call();
+            __.assert().exists(result);
+            result.handle(
               x -> { self = x; }
             );
           }catch(e:CYCLED){

@@ -105,6 +105,7 @@ class StreamLift{
         var cbI  = self.handle(
           (chunk) -> {
             __.syslog().trace('stream:${id} log:lhs ');
+            __.assert().exists(chunk);
             chunk.fold(
               val -> cb(Val(val)),
               end -> __.option(end).fold(
@@ -163,6 +164,7 @@ class StreamLift{
           final callback  = self.handle(
             (chunk) -> chunk.fold(
               val -> {
+                //__.assert().exists(val);
                 if(!cancelled){
                   __.syslog().debug('$val');
                   __.syslog().debug("ADDED STREAM");
@@ -172,7 +174,7 @@ class StreamLift{
               end -> __.option(end).fold(
                 err -> {
                   __.syslog().debug('CANCELLED $err');
-                  cancelled = true;
+                cancelled = true;
                   streams   = [];
                   cb(End(err));
                 },
@@ -206,7 +208,7 @@ class StreamLift{
   static public function next<T,E>(self:Stream<T,E>):Future<Chunk<T,E>>{
     return self.prj().nextTime();
   }
-  static public function errata<T,E,EE>(self:Stream<T,E>,fn:Exception<E>->Exception<EE>):Stream<T,EE>{
+  static public function errata<T,E,EE>(self:Stream<T,E>,fn:Rejection<E>->Rejection<EE>):Stream<T,EE>{
     return lift(self.prj().map(
       chk -> chk.errata(fn)
     ));
