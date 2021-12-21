@@ -1,6 +1,6 @@
 package stx.stream;
 
-typedef WorkDef = Option<Future<Cycle>>;
+typedef WorkDef = Option<Cycle>;
 
 @:using(stx.stream.Work.WorkLift)
 @:callable abstract Work(WorkDef) from WorkDef to WorkDef{
@@ -18,17 +18,17 @@ typedef WorkDef = Option<Future<Cycle>>;
   private function get_self():Work return lift(this);
 
   static public inline function fromCycle(self:Cycle):Work{
-    return __.option(Future.irreversible(cb -> cb(self)));
+    return __.option(self);
   }
   @:from static public function fromFutureWork(ft:Future<Work>):Work{
     return lift(Some(
-      ft.flatMap(
+      () -> ft.flatMap(
         (bang) -> bang.prj().fold(
           ok -> ok,
-          () -> Future.irreversible((cb) -> cb(Cycle.ZERO))
+          () -> Cycle.ZERO)
         )
       )
-    ));
+    );
   } 
   @:to public function toCycle():Cycle{
     return Cycle.fromWork(this);
@@ -48,7 +48,7 @@ typedef WorkDef = Option<Future<Cycle>>;
     
   // }
   @:to public function toWork():Work{
-    return Work.lift(Some((this.asFuture())));
+    return Work.lift(Some(() -> this.asFuture()));
   }
 }
 class WorkLift{
@@ -59,18 +59,9 @@ class WorkLift{
     return lift(
       self.prj().zip(that.prj()).map(
         tp -> tp.decouple(
-          (lhs,rhs) -> {
+          (lhs:Cycle,rhs:Cycle) -> {
             //__.log().trace('$lhs $rhs');
-            return Future.inSequence([lhs,rhs]).map(
-              arr -> Cycle.lift(
-                switch([arr[0] == Cycle.ZERO,arr[1] == Cycle.ZERO]){
-                  case [true,true]  : Cycle.ZERO;
-                  case [true,false] : arr[1] == null ? Cycle.ZERO : arr[1];
-                  case [false,true] : arr[0] == null ? Cycle.ZERO : arr[0];
-                  default           : __.option(arr[0]).defv(Cycle.ZERO).seq(__.option(arr[1]).defv(Cycle.ZERO));
-                } 
-              )
-            );
+            return lhs.seq(rhs);
           }
         )
       ).or(() -> self.prj()) 
@@ -80,18 +71,16 @@ class WorkLift{
   static public function par(self:Work,that:Work):Work{
     __.log().trace('work par setup');
     return lift(
-      self.prj().zip(that.prj()).map(
-        tp -> tp.decouple(
-          (lhs,rhs) -> {
-            return Future.inParallel([lhs,rhs]).map(
-              arr -> Cycle.lift(
-                () -> __.option(arr[0]).defv(Cycle.ZERO).seq(__.option(arr[1]).defv(Cycle.ZERO))
-              )
-            );
-          }
-        )
-      ).or(() -> self.prj()) 
-       .or(() -> that.prj())
+      Work.lift(
+        self.prj().zip(that.prj()).map(
+          (tp:Couple<Cycle,Cycle>) -> tp.decouple(
+            (lhs:Cycle,rhs:Cycle) -> {
+              return lhs.par(rhs);
+            }
+          )
+        ).or(() -> self.prj()) 
+         .or(() -> that.prj())
+       )
     );
   }
 }

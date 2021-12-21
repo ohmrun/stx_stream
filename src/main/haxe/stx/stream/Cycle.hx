@@ -3,7 +3,7 @@ package stx.stream;
 enum CYCLED{
   CYCLED;
 }
-typedef CycleDef = Thunk<Future<Cycle>>;
+typedef CycleDef = () -> Future<Cycle>;
 
 @:using(stx.stream.Cycle.CycleLift)
 @:callable abstract Cycle(CycleDef) from CycleDef to CycleDef{
@@ -11,11 +11,14 @@ typedef CycleDef = Thunk<Future<Cycle>>;
     __.assert().exists(self);
     this = self;
   }
-  static public function lift(self:CycleDef):Cycle{
+  static private function lift(self:CycleDef):Cycle{
+    __.assert().exists(self);
     return new Cycle(self);
   }
-  static public var ZERO = unit();
-
+  static public var ZERO(get,null) : Cycle;
+  static private function get_ZERO(){
+    return ZERO == null  ? ZERO = unit() : ZERO;
+  }
   static public function unit():Cycle{
     return lift(() -> {
       throw CYCLED;
@@ -39,33 +42,37 @@ typedef CycleDef = Thunk<Future<Cycle>>;
 
 }
 class CycleLift{
-  static public function lift(self:CycleDef):Cycle return Cycle.lift(self);
+  static public function lift(self:CycleDef):Cycle return @:privateAccess Cycle.lift(self);
 
   static public function seq(self:Cycle,that:Cycle):Cycle{
-    //__.syslog().trace('seq setup');
+    __.assert().exists(self);
+    __.assert().exists(that);
+    __.syslog().trace('seq setup');
     return lift(
       () -> {
-        //__.syslog().trace('seq call');
+        __.syslog().trace('seq call');
         return try{
           final next = self();
-          //__.syslog().trace('$next');
+          __.assert().exists(next);
+          __.syslog().trace('$next');
           next.map(seq.bind(_,that));
         }catch(e:CYCLED){
-          //__.syslog().trace('seq:that $that');
+          __.syslog().trace('seq:that $that');
           that;
         };
       } 
     );
   }
   static public function par(self:Cycle,that:Cycle):Cycle{
+    __.assert().exists(self);
+    __.assert().exists(that);
     return lift(
       () -> {
         var l = None;
         var r = None;
         try{
           l = Some(self());
-        }catch(e:CYCLED){}
-        
+        }catch(e:CYCLED){}        
         try{
           r = Some(that());
         }catch(e:CYCLED){}
@@ -135,6 +142,7 @@ class CycleLift{
   }
   //TODO backoff algo
   static public function crunch(self:Cycle){
+    __.assert().exists(self);
     __.syslog().trace('crunching');
     
     function inner(self:Cycle){
@@ -149,8 +157,12 @@ class CycleLift{
             final result = call();
             __.assert().exists(result);
             result.handle(
-              x -> { self = x; }
+              x -> { 
+                __.syslog().trace('crunching:handled');    
+                self = x;
+               }
             );
+            __.syslog().trace("crunch:handle_called");
           }catch(e:CYCLED){
             __.syslog().trace("cycled");
             cont = false;
@@ -158,8 +170,9 @@ class CycleLift{
           }catch(e:haxe.Exception){
             throw e;
           }
+          __.assert().exists(self);
         }else{
-          break;//TODO who hands in a null here?
+          break;
           //throw 'Cycle handed null to run';
         }
       }
