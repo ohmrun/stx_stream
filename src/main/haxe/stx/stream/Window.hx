@@ -58,7 +58,7 @@ class WindowCls<T,E>{
     
       partial.source(() -> Future.sync(Right(Stop)))
              .emiter(_ -> End())
-             .accept(stx.coroutine.pack.Accept.handler(handler))
+             .secure(Secure.handler(handler))
              .run()
              .handle(
                 cause -> switch(cause){

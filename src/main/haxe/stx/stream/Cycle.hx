@@ -47,17 +47,17 @@ class CycleLift{
   static public function seq(self:Cycle,that:Cycle):Cycle{
     __.assert().exists(self);
     __.assert().exists(that);
-    __.syslog().trace('seq setup');
+    __.log().blank('seq setup');
     return lift(
       () -> {
-        __.syslog().trace('seq call');
+        __.log().blank('seq call');
         return try{
           final next = self();
           __.assert().exists(next);
-          __.syslog().trace('$next');
+          __.log().blank('$next');
           next.map(seq.bind(_,that));
         }catch(e:CYCLED){
-          __.syslog().trace('seq:that $that');
+          __.log().blank('seq:that $that');
           that;
         };
       } 
@@ -89,34 +89,34 @@ class CycleLift{
     );
   }
   static public function submit(self:Cycle){
-    __.syslog().info('cycle/submit');
+    __.log().trace('cycle/submit');
     var event : haxe.MainLoop.MainEvent = null;
         event = haxe.MainLoop.add(
           () -> {
             try{
-              __.syslog().trace('cycle:call');
+              __.log().blank('cycle:call');
               self().handle(
                 function rec(x:Cycle){
                   try{
-                    __.syslog().trace('cycle:loop');
+                    __.log().blank('cycle:loop');
                     final next = x();
-                    __.syslog().trace('cycle:loop:next $next');
+                    __.log().blank('cycle:loop:next $next');
                     next.handle(rec);
                   }catch(e:CYCLED){
-                    __.syslog().trace('cycle:stop');
+                    __.log().blank('cycle:stop');
                     event.stop();
                     final has_events = haxe.MainLoop.hasEvents();
-                    __.syslog().debug('has_events $has_events $event');
+                    __.log().blank('has_events $has_events $event');
 
                     final pending   = @:privateAccess haxe.EntryPoint.pending.length;
-                    __.syslog().debug('has_pending $pending');
+                    __.log().blank('has_pending $pending');
 
                     final thread_count = @:privateAccess haxe.EntryPoint.threadCount;
 
-                    __.syslog().debug('thread count $thread_count');
+                    __.log().blank('thread count $thread_count');
                     
                   }catch(e:Dynamic){
-                    __.syslog().trace('cycle:quit $e');
+                    __.log().fatal('cycle:quit $e');
                     event.stop();
                     haxe.MainLoop.runInMainThread(
                       () -> {
@@ -127,10 +127,10 @@ class CycleLift{
                 }
               );
             }catch(e:CYCLED){
-              __.syslog().trace('cycle:stop');
+              __.log().fatal('cycle:stop');
               event.stop();
             }catch(e:Dynamic){
-              __.syslog().trace('cycle:quit $e');
+              __.log().fatal('cycle:quit $e');
               haxe.MainLoop.runInMainThread(
                 () -> {
                   throw(e);
@@ -143,14 +143,14 @@ class CycleLift{
   //TODO backoff algo
   static public function crunch(self:Cycle){
     __.assert().exists(self);
-    __.syslog().trace('crunching');
+    __.log().info('crunch');
     
     function inner(self:Cycle){
       var cont = true;
       while(cont){
-        __.syslog().trace('$cont $self');
+        __.log().blank('$cont $self');
         if(self!=null){
-          __.syslog().trace('crunching:call');    
+          __.log().blank('crunching:call');    
           final call = self;
           self = null;
           try{
@@ -158,16 +158,17 @@ class CycleLift{
             __.assert().exists(result);
             result.handle(
               x -> { 
-                __.syslog().trace('crunching:handled');    
+                __.log().blank('crunching:handled');    
                 self = x;
                }
             );
-            __.syslog().trace("crunch:handle_called");
+            __.log().blank("crunch:handle_called");
           }catch(e:CYCLED){
-            __.syslog().trace("cycled");
+            __.log().blank("cycled");
             cont = false;
             break;
           }catch(e:haxe.Exception){
+            __.log().fatal(e.toString());
             throw e;
           }
           __.assert().exists(self);

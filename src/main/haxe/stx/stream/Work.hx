@@ -69,7 +69,7 @@ class WorkLift{
     );
   }
   static public function par(self:Work,that:Work):Work{
-    __.log().trace('work par setup');
+    __.log().blank('work par setup');
     return lift(
       Work.lift(
         self.prj().zip(that.prj()).map(

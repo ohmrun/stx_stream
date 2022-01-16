@@ -68,7 +68,7 @@ typedef StreamDef<T,E>                          = Signal<Chunk<T,E>>;
     );
   }
   static public function unit<T,E>():Stream<T,E>{
-    __.syslog().debug("unit");
+    __.log().blank("unit");
     return lift(
       Signal.make(
         (cb:Chunk<T,E>->Void) -> {
@@ -96,23 +96,22 @@ class StreamLift{
   }
   static public function seq<T,E>(self:Stream<T,E>,that:Stream<T,E>):Stream<T,E>{
     var id        = __.uuid("xxxx");
-    __.syslog().trace('seq');
+    __.log().blank('seq');
     var ended = false;
     return lift(Signal.make(
       (cb) -> {
         var cbII = null;
-        __.syslog().trace(_ -> _.pure(self));
+        __.log().blank(_ -> _.pure(self));
         var cbI  = self.handle(
           (chunk) -> {
-            __.syslog().trace('stream:${id} log:lhs ');
-            __.assert().exists(chunk);
+            __.log().blank('stream:${id} log:lhs ');
+            //__.assert().exists(chunk);
             chunk.fold(
               val -> cb(Val(val)),
               end -> __.option(end).fold(
                 err -> cb(End(err)),
                 ()  -> {
-                  __.syslog().debug('stream:${id} log:lhs:end()');
-                  //__.log().debug('log:gap: ${haxe.MainLoop.hasEvents()}');
+                  __.log().blank('stream:${id} log:lhs:end()');
                   cbII = that.handle(
                       (chunk) -> {
                         chunk.fold(
@@ -120,11 +119,11 @@ class StreamLift{
                           if(!ended){
                             cb(Val(val));
                           }else{
-                            cb(End(__.fault().external("already ended")));
+                            cb(End(__.fault().explain(_ -> _.e_end_called_twice())));
                           }
                         },
                         (end) -> {
-                          __.syslog().debug('stream:${id} rhs:end');
+                          __.log().blank('stream:${id} rhs:end');
                           ended = true;
                           cb(End(end));
                         },
@@ -159,30 +158,29 @@ class StreamLift{
     return lift(
       new TinkSignal(
         (cb) -> {
-          __.syslog().debug('$id $self');
+          __.log().blank('$id $self');
           var callbackI   = null;
           final callback  = self.handle(
             (chunk) -> chunk.fold(
               val -> {
-                //__.assert().exists(val);
                 if(!cancelled){
-                  __.syslog().debug('$val');
-                  __.syslog().debug("ADDED STREAM");
+                  __.log().blank('$val');
+                  __.log().blank("ADDED STREAM");
                   streams.push(fn(val));
                 }
               },
               end -> __.option(end).fold(
                 err -> {
-                  __.syslog().debug('CANCELLED $err');
+                  __.log().blank('CANCELLED $err');
                 cancelled = true;
                   streams   = [];
                   cb(End(err));
                 },
                 () -> {
-                  __.syslog().debug('stream:${id} SEQ ${streams.length} ');
+                  __.log().blank('stream:${id} SEQ ${streams.length} ');
                   callbackI = streams.lfold1(seq).defv(Stream.unit()).handle(
                     chunk -> {
-                      __.syslog().debug('$chunk');
+                      __.log().blank('$chunk');
                       cb(chunk);
                     }
                   );

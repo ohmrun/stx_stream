@@ -10,3 +10,5 @@ using stx.Fn;
 using stx.Coroutine;
 using stx.Assert;
 using stx.coroutine.Core;
+using stx.Stream;
+using stx.stream.Core;
