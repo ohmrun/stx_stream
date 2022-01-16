@@ -89,7 +89,7 @@ class CycleLift{
     );
   }
   static public function submit(self:Cycle){
-    __.log().trace('cycle/submit');
+    __.log().info('cycle/submit');
     var event : haxe.MainLoop.MainEvent = null;
         event = haxe.MainLoop.add(
           () -> {
@@ -143,7 +143,7 @@ class CycleLift{
   //TODO backoff algo
   static public function crunch(self:Cycle){
     __.assert().exists(self);
-    __.log().info('crunch');
+    __.log().info('cycle/crunch');
     
     function inner(self:Cycle){
       var cont = true;
