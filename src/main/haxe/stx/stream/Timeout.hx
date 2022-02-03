@@ -4,7 +4,7 @@ package stx.stream;
   public function new(ms:Int){
     final id = __.uuid('xxxx');
     __.log().trace('timeout#$id: $ms');
-    final multiplier = 1.02;
+    final multiplier = 1.01;
     function step(time:Int){
       return Math.round(time * multiplier);
     }

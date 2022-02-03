@@ -47,17 +47,17 @@ class CycleLift{
   static public function seq(self:Cycle,that:Cycle):Cycle{
     __.assert().exists(self);
     __.assert().exists(that);
-    __.log().blank('seq setup');
+    //__.log().blank('seq setup');
     return lift(
       () -> {
-        __.log().blank('seq call');
+        //__.log().blank('seq call');
         return try{
           final next = self();
           __.assert().exists(next);
-          __.log().blank('$next');
+          //__.log().blank('$next');
           next.map(seq.bind(_,that));
         }catch(e:CYCLED){
-          __.log().blank('seq:that $that');
+          //__.log().blank('seq:that $that');
           that;
         };
       } 
@@ -94,26 +94,26 @@ class CycleLift{
         event = haxe.MainLoop.add(
           () -> {
             try{
-              __.log().blank('cycle:call');
+              //__.log().blank('cycle:call');
               self().handle(
                 function rec(x:Cycle){
                   try{
-                    __.log().blank('cycle:loop');
+                    //__.log().blank('cycle:loop');
                     final next = x();
-                    __.log().blank('cycle:loop:next $next');
+                    //__.log().blank('cycle:loop:next $next');
                     next.handle(rec);
                   }catch(e:CYCLED){
-                    __.log().blank('cycle:stop');
+                    //__.log().blank('cycle:stop');
                     event.stop();
                     final has_events = haxe.MainLoop.hasEvents();
-                    __.log().blank('has_events $has_events $event');
+                    //__.log().blank('has_events $has_events $event');
 
                     final pending   = @:privateAccess haxe.EntryPoint.pending.length;
-                    __.log().blank('has_pending $pending');
+                    //__.log().blank('has_pending $pending');
 
                     final thread_count = @:privateAccess haxe.EntryPoint.threadCount;
 
-                    __.log().blank('thread count $thread_count');
+                    //__.log().blank('thread count $thread_count');
                     
                   }catch(e:Dynamic){
                     __.log().fatal('cycle:quit $e');
@@ -148,9 +148,9 @@ class CycleLift{
     function inner(self:Cycle){
       var cont = true;
       while(cont){
-        __.log().blank('$cont $self');
+        //__.log().blank('$cont $self');
         if(self!=null){
-          __.log().blank('crunching:call');    
+          //__.log().blank('crunching:call');    
           final call = self;
           self = null;
           try{
@@ -158,13 +158,13 @@ class CycleLift{
             __.assert().exists(result);
             result.handle(
               x -> { 
-                __.log().blank('crunching:handled');    
+                //__.log().blank('crunching:handled');    
                 self = x;
                }
             );
-            __.log().blank("crunch:handle_called");
+            //__.log().blank("crunch:handle_called");
           }catch(e:CYCLED){
-            __.log().blank("cycled");
+            //__.log().blank("cycled");
             cont = false;
             break;
           }catch(e:haxe.Exception){
