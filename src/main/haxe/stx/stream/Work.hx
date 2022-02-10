@@ -22,13 +22,13 @@ typedef WorkDef = Option<Cycle>;
   }
   @:from static public function fromFutureWork(ft:Future<Work>):Work{
     return lift(Some(
-      () -> ft.flatMap(
+      () -> __.couple(CYCLE_NEXT,ft.flatMap(
         (bang) -> bang.prj().fold(
           ok -> ok,
-          () -> Cycle.ZERO)
+          () -> Cycle.ZERO
         )
       )
-    );
+    )));
   } 
   @:to public function toCycle():Cycle{
     return Cycle.fromWork(this);
@@ -48,7 +48,7 @@ typedef WorkDef = Option<Cycle>;
     
   // }
   @:to public function toWork():Work{
-    return Work.lift(Some(() -> this.asFuture()));
+    return Work.lift(Some(() -> __.couple(CYCLE_NEXT,this.asFuture())));
   }
 }
 class WorkLift{

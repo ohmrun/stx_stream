@@ -3,7 +3,11 @@ package stx.stream;
 enum CYCLED{
   CYCLED;
 }
-typedef CycleDef = () -> Future<Cycle>;
+enum abstract CycleState(UInt){
+  var CYCLE_STOP = 0;
+  var CYCLE_NEXT = 1;
+}
+typedef CycleDef = () -> Couple<CycleState,Null<Future<Cycle>>>;
 
 @:using(stx.stream.Cycle.CycleLift)
 @:callable abstract Cycle(CycleDef) from CycleDef to CycleDef{
@@ -21,21 +25,20 @@ typedef CycleDef = () -> Future<Cycle>;
   }
   static public function unit():Cycle{
     return lift(() -> {
-      throw CYCLED;
-      return unit();
+      return __.couple(CYCLE_STOP,null);
     });
   }
   @:from static public function fromFutureCycle(self:Future<Cycle>):Cycle{
     return lift(
       () -> {
         __.assert().exists(self);
-        return self;
+        return __.couple(CYCLE_NEXT,self);
       }  
     );
   }
   @:from static public function fromWork(self:Work):Cycle{
     return self.prj().fold(
-      (ok) -> lift(() -> ok),
+      (ok) -> lift(() -> __.couple(CYCLE_NEXT,Future.irreversible(cb -> cb(ok)))),
       ()   -> ZERO
     );
   }
@@ -45,45 +48,39 @@ class CycleLift{
   static public function lift(self:CycleDef):Cycle return @:privateAccess Cycle.lift(self);
 
   static public function seq(self:Cycle,that:Cycle):Cycle{
+    #if debug
     __.assert().exists(self);
     __.assert().exists(that);
-    //__.log().blank('seq setup');
+    __.log().trace('seq setup');
+    #end
     return lift(
       () -> {
-        //__.log().blank('seq call');
-        return try{
-          final next = self();
-          __.assert().exists(next);
-          //__.log().blank('$next');
-          next.map(seq.bind(_,that));
-        }catch(e:CYCLED){
-          //__.log().blank('seq:that $that');
-          that;
-        };
-      } 
+        #if debug
+        __.log().trace('seq called');
+        #end
+        return self().decouple(
+          (i,n) -> switch(i){
+            case CYCLE_NEXT : __.couple(CYCLE_NEXT,n.map(seq.bind(_,that)));
+            case CYCLE_STOP : __.couple(CYCLE_NEXT,Future.irreversible(cb -> cb(that)));
+          }
+        ); 
+      }
     );
   }
   static public function par(self:Cycle,that:Cycle):Cycle{
+    #if debug
     __.assert().exists(self);
     __.assert().exists(that);
+    #end
     return lift(
       () -> {
-        var l = None;
-        var r = None;
-        try{
-          l = Some(self());
-        }catch(e:CYCLED){}        
-        try{
-          r = Some(that());
-        }catch(e:CYCLED){}
-        
-        return switch([l,r]){
-          case [Some(l),Some(r)]  : lift(() -> Future.inParallel([l,r]).map(
-            arr -> par(arr[0],arr[1])
-          ));
-          case [Some(l),None]     : l;
-          case [None,Some(r)]     : r;
-          case [None,None]        : Cycle.ZERO(); 
+        var l = self();
+        var r = self();
+        return switch([l.tup(),r.tup()]){
+          case [tuple2(CYCLE_STOP,_),tuple2(CYCLE_STOP,_)] : __.couple(CYCLE_STOP,null);
+          case [tuple2(CYCLE_NEXT,n),tuple2(CYCLE_STOP,_)] : __.couple(CYCLE_NEXT,n);
+          case [tuple2(CYCLE_STOP,_),tuple2(CYCLE_NEXT,n)] : __.couple(CYCLE_NEXT,n);
+          case [tuple2(CYCLE_NEXT,a),tuple2(CYCLE_NEXT,b)] : __.couple(CYCLE_NEXT,a.merge(b,seq));
         }
       }
     );
@@ -93,49 +90,32 @@ class CycleLift{
     var event : haxe.MainLoop.MainEvent = null;
         event = haxe.MainLoop.add(
           () -> {
-            try{
-              //__.log().blank('cycle:call');
-              self().handle(
-                function rec(x:Cycle){
-                  try{
-                    //__.log().blank('cycle:loop');
-                    final next = x();
-                    //__.log().blank('cycle:loop:next $next');
-                    next.handle(rec);
-                  }catch(e:CYCLED){
-                    //__.log().blank('cycle:stop');
-                    event.stop();
-                    final has_events = haxe.MainLoop.hasEvents();
-                    //__.log().blank('has_events $has_events $event');
-
-                    final pending   = @:privateAccess haxe.EntryPoint.pending.length;
-                    //__.log().blank('has_pending $pending');
-
-                    final thread_count = @:privateAccess haxe.EntryPoint.threadCount;
-
-                    //__.log().blank('thread count $thread_count');
-                    
-                  }catch(e:Dynamic){
-                    __.log().fatal('cycle:quit $e');
-                    event.stop();
-                    haxe.MainLoop.runInMainThread(
-                      () -> {
-                        throw(e);
-                      }
-                    );
+            //__.log().trace('tick');
+            if(self != null){
+              try{
+                var next = self;
+                self = null;
+                next().decouple(
+                  (code,next) -> switch(code){
+                    case CYCLE_STOP : 
+                      event.stop();
+                    case CYCLE_NEXT :
+                      //__.log().trace('next');
+                      next.handle(
+                        x -> {
+                          self = x;
+                        }
+                      );  
                   }
-                }
-              );
-            }catch(e:CYCLED){
-              __.log().fatal('cycle:stop');
-              event.stop();
-            }catch(e:Dynamic){
-              __.log().fatal('cycle:quit $e');
-              haxe.MainLoop.runInMainThread(
-                () -> {
-                  throw(e);
-                }
-              );
+                );
+              }catch(e:Dynamic){
+                event.stop();
+                haxe.MainLoop.runInMainThread(
+                  () -> {
+                    throw(e);
+                  }
+                );
+              }
             }
           }
         );
@@ -148,33 +128,29 @@ class CycleLift{
     function inner(self:Cycle){
       var cont = true;
       while(cont){
-        //__.log().blank('$cont $self');
+        __.log().blank('$cont $self');
         if(self!=null){
-          //__.log().blank('crunching:call');    
+          __.log().blank('crunching:call');    
           final call = self;
           self = null;
           try{
             final result = call();
             __.assert().exists(result);
-            result.handle(
-              x -> { 
-                //__.log().blank('crunching:handled');    
-                self = x;
-               }
+            result.decouple(
+              (code,next) -> {
+                switch(code) {
+                  case CYCLE_STOP : 
+                    cont = false;
+                    null;
+                  case CYCLE_NEXT :
+                    next.handle(
+                      x -> self = x
+                    );
+                    null;
+                }
+              }
             );
-            //__.log().blank("crunch:handle_called");
-          }catch(e:CYCLED){
-            //__.log().blank("cycled");
-            cont = false;
-            break;
-          }catch(e:haxe.Exception){
-            __.log().fatal(e.toString());
-            throw e;
           }
-          __.assert().exists(self);
-        }else{
-          break;
-          //throw 'Cycle handed null to run';
         }
       }
     }
