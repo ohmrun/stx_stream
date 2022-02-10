@@ -7,107 +7,176 @@ enum abstract CycleState(UInt){
   var CYCLE_STOP = 0;
   var CYCLE_NEXT = 1;
 }
-typedef CycleDef = () -> Couple<CycleState,Null<Future<Cycle>>>;
+interface CyclerApi{
+  public var state(get,null)          : CycleState;
+  public function get_state()         : CycleState;
+  
+  public var value(get,null)          : Null<Future<Cycle>>;
+  public function get_value()         : Null<Future<Cycle>>;
 
+  public function toString():String;
+  public function toCyclerApi():CyclerApi;
+}
+abstract class CyclerCls implements CyclerApi{
+  public var state(get,null)            : CycleState;
+  abstract public function get_state()  : CycleState;
+
+  public var value(get,null)            : Null<Future<Cycle>>;
+  abstract public function get_value()  : Null<Future<Cycle>>;
+
+  public inline function toString(){
+    return 'Cycler($state:$value)';
+  } 
+  public function toCyclerApi():CyclerApi{
+    return this;
+  }
+}
+class AnonCyclerCls extends CyclerCls{
+  final method : Void -> Future<Cycle>;
+  public function new(method){
+    this.method = method.cache();
+  }
+  public function get_value(){
+    return this.method();
+  }
+  public function get_state(){
+    return this.value == null ? CYCLE_STOP : CYCLE_NEXT;
+  }
+}
+class UnitCyclerCls extends CyclerCls{
+  public function new(){}
+  public function get_value(){
+    return null;
+  }
+  public function get_state(){
+    return CYCLE_STOP;
+  }
+}
+class PureCyclerCls extends CyclerCls{
+  public function new(value){
+    this.value = value;
+  }
+  public function get_value(){
+    return value;
+  }
+  public function get_state(){
+    return CYCLE_NEXT;
+  }
+}
+@:forward abstract Cycler(CyclerApi) from CyclerApi to CyclerApi{
+  public function new(self) this = self;
+  static public inline function lift(self:CyclerApi):Cycler return new Cycler(self);
+
+  public function prj():CyclerApi return this;
+  private var self(get,never):Cycler;
+  private function get_self():Cycler return lift(this);
+
+  static public inline function unit(){
+    return lift(new UnitCyclerCls());
+  }
+  @:from static public inline function fromFuture(f:Future<Cycle>){
+    return lift(new PureCyclerCls(f));
+  }
+  static public inline function pure(f:Future<Cycle>):Cycler{
+    return lift(new PureCyclerCls(f));
+  }
+  @:to public function toCycle(){
+    return new Cycle(this);
+  }
+}
 @:using(stx.stream.Cycle.CycleLift)
-@:callable abstract Cycle(CycleDef) from CycleDef to CycleDef{
-  public function new(self:CycleDef) {
-    __.assert().exists(self);
+@:forward(toCyclerApi) abstract Cycle(CyclerApi) from CyclerApi to CyclerApi{
+  public function new(self:CyclerApi) {
+    //__.assert().exists(self);
     this = self;
   }
-  static private function lift(self:CycleDef):Cycle{
-    __.assert().exists(self);
+  static private inline function lift(self:CyclerApi):Cycle{
+    //__.assert().exists(self);
     return new Cycle(self);
   }
   static public var ZERO(get,null) : Cycle;
-  static private function get_ZERO(){
-    return ZERO == null  ? ZERO = unit() : ZERO;
+  static private inline function get_ZERO():Cycle{
+    return ZERO == null ? ZERO = unit() : ZERO;
   }
-  static public function unit():Cycle{
-    return lift(() -> {
-      return __.couple(CYCLE_STOP,null);
-    });
+  static public inline function unit():Cycle{
+    return lift(Cycler.unit());
   }
-  @:from static public function fromFutureCycle(self:Future<Cycle>):Cycle{
+  @:from static public inline function fromFutureCycle(self:Future<Cycle>):Cycle{
     return lift(
-      () -> {
-        __.assert().exists(self);
-        return __.couple(CYCLE_NEXT,self);
-      }  
+      Cycler.pure(self)
     );
   }
-  @:from static public function fromWork(self:Work):Cycle{
-    return self.prj().fold(
-      (ok) -> lift(() -> __.couple(CYCLE_NEXT,Future.irreversible(cb -> cb(ok)))),
-      ()   -> ZERO
-    );
+@:from static public function fromWork(self:Work):Cycle{
+    return self.is_defined() ? Cycle.lift(self.toCyclerApi()) : Cycle.ZERO;
   }
-
+  public inline function step(){
+    return this == null ? Cycler.unit() : this;
+  }
+  public inline function is_defined(){
+    return this != null;
+  }
+  public function toString(){
+    return 'Cycle(${is_defined()})';
+  }
 }
 class CycleLift{
-  static public function lift(self:CycleDef):Cycle return @:privateAccess Cycle.lift(self);
+  static public inline function lift(self:CyclerApi):Cycle return @:privateAccess Cycle.lift(self);
 
   static public function seq(self:Cycle,that:Cycle):Cycle{
     #if debug
-    __.assert().exists(self);
-    __.assert().exists(that);
-    __.log().trace('seq setup');
+      //__.log().trace('seq setup $self $that');
     #end
-    return lift(
-      () -> {
-        #if debug
-        __.log().trace('seq called');
-        #end
-        return self().decouple(
-          (i,n) -> switch(i){
-            case CYCLE_NEXT : __.couple(CYCLE_NEXT,n.map(seq.bind(_,that)));
-            case CYCLE_STOP : __.couple(CYCLE_NEXT,Future.irreversible(cb -> cb(that)));
-          }
-        ); 
-      }
-    );
+    return switch([self.is_defined(),that.is_defined()]){
+      case [false,false]    : Cycle.unit();
+      case [false,true]     : that;
+      case [true,false]     : self;
+      case [true,true]      : 
+        final next = self.step(); 
+        switch(next.state){
+          case CYCLE_NEXT : new Cycle(Cycler.pure(next.value.map(seq.bind(_,that))));
+          case CYCLE_STOP : that;
+        }
+    }
   }
   static public function par(self:Cycle,that:Cycle):Cycle{
     #if debug
     __.assert().exists(self);
     __.assert().exists(that);
     #end
-    return lift(
-      () -> {
-        var l = self();
-        var r = self();
-        return switch([l.tup(),r.tup()]){
-          case [tuple2(CYCLE_STOP,_),tuple2(CYCLE_STOP,_)] : __.couple(CYCLE_STOP,null);
-          case [tuple2(CYCLE_NEXT,n),tuple2(CYCLE_STOP,_)] : __.couple(CYCLE_NEXT,n);
-          case [tuple2(CYCLE_STOP,_),tuple2(CYCLE_NEXT,n)] : __.couple(CYCLE_NEXT,n);
-          case [tuple2(CYCLE_NEXT,a),tuple2(CYCLE_NEXT,b)] : __.couple(CYCLE_NEXT,a.merge(b,seq));
-        }
-      }
-    );
+    var l = self.step();
+    var r = self.step();
+  
+    return switch([l.state,r.state]){
+      case [CYCLE_STOP,CYCLE_STOP] : Cycler.unit();
+      case [CYCLE_NEXT,CYCLE_STOP] : Cycler.pure(l.value);
+      case [CYCLE_STOP,CYCLE_NEXT] : Cycler.pure(r.value);
+      case [CYCLE_NEXT,CYCLE_NEXT] : Cycler.pure(l.value.merge(r.value,seq));
+    }
   }
-  static public function submit(self:Cycle){
-    __.log().info('cycle/submit');
+  static public function submit(self:Cycle,?pos:Pos){
+    __.log().info('cycle/submit: $self $pos');
     var event : haxe.MainLoop.MainEvent = null;
         event = haxe.MainLoop.add(
           () -> {
-            //__.log().trace('tick');
+            __.log().trace('tick: $self');
             if(self != null){
               try{
-                var next = self;
+                var thiz = self;
+                __.log().trace(thiz.toString());
                 self = null;
-                next().decouple(
-                  (code,next) -> switch(code){
-                    case CYCLE_STOP : 
+                var step = thiz.step();
+                __.log().trace(_ -> _.thunk(()  -> step.state));
+                switch(step.state){
+                  case CYCLE_STOP : 
                       event.stop();
-                    case CYCLE_NEXT :
-                      //__.log().trace('next');
-                      next.handle(
-                        x -> {
-                          self = x;
-                        }
-                      );  
-                  }
-                );
+                  case CYCLE_NEXT :
+                    //__.log().trace('next');
+                    step.value.handle(
+                      x -> {
+                        self = x;
+                      }
+                    );
+                }
               }catch(e:Dynamic){
                 event.stop();
                 haxe.MainLoop.runInMainThread(
@@ -122,7 +191,6 @@ class CycleLift{
   }
   //TODO backoff algo
   static public function crunch(self:Cycle){
-    __.assert().exists(self);
     __.log().info('cycle/crunch');
     
     function inner(self:Cycle){
@@ -134,22 +202,17 @@ class CycleLift{
           final call = self;
           self = null;
           try{
-            final result = call();
-            __.assert().exists(result);
-            result.decouple(
-              (code,next) -> {
-                switch(code) {
-                  case CYCLE_STOP : 
-                    cont = false;
-                    null;
-                  case CYCLE_NEXT :
-                    next.handle(
-                      x -> self = x
-                    );
-                    null;
-                }
-              }
-            );
+            final result = call.step();
+            switch(result.state){
+              case CYCLE_STOP : 
+                cont = false;
+                null;
+              case CYCLE_NEXT :
+                result.value.handle(
+                  x -> self = x
+                );
+                null;
+            }
           }
         }
       }

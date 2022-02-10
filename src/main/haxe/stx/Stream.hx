@@ -12,6 +12,7 @@ typedef Bang                                    = stx.stream.Work.Bang;
 typedef Cycle                                   = stx.stream.Cycle;
 typedef CYCLED                                  = stx.stream.Cycle.CYCLED;
 typedef CycleState                              = stx.stream.Cycle.CycleState;
+typedef Cycler                                  = stx.stream.Cycle.Cycler;
 typedef Window<T,E>                             = stx.stream.Window<T,E>;
 typedef Buffer<T>                               = stx.stream.Buffer<T>;
 

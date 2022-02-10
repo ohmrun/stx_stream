@@ -1,37 +1,37 @@
 package stx.stream;
 
-typedef WorkDef = Option<Cycle>;
+typedef WorkDef = Null<Cycle>;
 
 @:using(stx.stream.Work.WorkLift)
-@:callable abstract Work(WorkDef) from WorkDef to WorkDef{
-  @:noUsing static public function unit():Work{
-    return lift(None);
+@:forward(toCyclerApi) abstract Work(WorkDef) from WorkDef to WorkDef{
+  @:noUsing static inline public function unit():Work{
+    return lift(null);
   }
-  static public function wait():Bang{
+  static public inline function wait():Bang{
     return new Bang();
   }
-  public function new(self) this = self;
-  static public function lift(self:WorkDef):Work return new Work(self);
+  public inline function new(self) this = self;
+  static public inline function lift(self:WorkDef):Work return new Work(self);
 
-  public function prj():WorkDef return this;
+  public inline function prj():WorkDef return this;
   private var self(get,never):Work;
-  private function get_self():Work return lift(this);
+  private inline function get_self():Work return lift(this);
 
   static public inline function fromCycle(self:Cycle):Work{
-    return __.option(self);
+    return Work.lift(self);
   }
-  @:from static public function fromFutureWork(ft:Future<Work>):Work{
-    return lift(Some(
-      () -> __.couple(CYCLE_NEXT,ft.flatMap(
-        (bang) -> bang.prj().fold(
-          ok -> ok,
-          () -> Cycle.ZERO
-        )
-      )
-    )));
+  @:from static public inline function fromFutureWork(ft:Future<Work>):Work{
+    return lift(
+      new Cycle(Cycler.pure(ft.flatMap(
+        (bang) -> bang == null ? Cycle.ZERO : bang
+      )))
+    );
   } 
   @:to public function toCycle():Cycle{
     return Cycle.fromWork(this);
+  }
+  public function is_defined():Bool{
+    return this != null;
   }
 }
 @:forward(handle) abstract Bang(FutureTrigger<Cycle>){
@@ -48,7 +48,9 @@ typedef WorkDef = Option<Cycle>;
     
   // }
   @:to public function toWork():Work{
-    return Work.lift(Some(() -> __.couple(CYCLE_NEXT,this.asFuture())));
+    return Work.lift(
+      this == null ? null : new Cycle(Cycler.pure(this.asFuture()))
+    );
   }
 }
 class WorkLift{
@@ -57,30 +59,23 @@ class WorkLift{
   static public function seq(self:Work,that:Work):Work{
     //__.log().trace('work seq setup $self $that');
     return lift(
-      self.prj().zip(that.prj()).map(
-        tp -> tp.decouple(
-          (lhs:Cycle,rhs:Cycle) -> {
-            //__.log().trace('$lhs $rhs');
-            return lhs.seq(rhs);
-          }
-        )
-      ).or(() -> self.prj()) 
-       .or(() -> that.prj())
+      switch([self,that]){
+        case [null,null] : null;
+        case [x,null]    : x;
+        case [null,y]    : y;
+        case [x,y]       : (x:Cycle).seq((y:Cycle));
+      }
     );
   }
   static public function par(self:Work,that:Work):Work{
     //__.log().blank('work par setup');
     return lift(
-      Work.lift(
-        self.prj().zip(that.prj()).map(
-          (tp:Couple<Cycle,Cycle>) -> tp.decouple(
-            (lhs:Cycle,rhs:Cycle) -> {
-              return lhs.par(rhs);
-            }
-          )
-        ).or(() -> self.prj()) 
-         .or(() -> that.prj())
-       )
+      switch([self,that]){
+        case [null,null] : null;
+        case [x,null]    : x;
+        case [null,y]    : y;
+        case [x,y]       : x.par(y);
+      }
     );
   }
 }
