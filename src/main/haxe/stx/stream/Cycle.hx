@@ -173,6 +173,7 @@ class CycleLift{
                     //__.log().trace('next');
                     step.value.handle(
                       x -> {
+                        __.log().trace("set step");
                         self = x;
                       }
                     );

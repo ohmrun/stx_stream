@@ -166,7 +166,7 @@ class StreamLift{
             (chunk) -> chunk.fold(
               val -> {
                 if(!cancelled){
-                  //__.log().blank('$val');
+                  __.log().trace(_ -> _.thunk(() -> '$val'));
                   //__.log().blank("ADDED STREAM");
                   streams.push(fn(val));
                 }
