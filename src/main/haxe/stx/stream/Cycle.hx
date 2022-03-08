@@ -6,6 +6,7 @@ enum CYCLED{
 enum abstract CycleState(UInt){
   var CYCLE_STOP = 0;
   var CYCLE_NEXT = 1;
+  //var CYCLE_WAIT = 2;
 }
 interface CyclerApi{
   public var state(get,null)          : CycleState;
@@ -204,6 +205,7 @@ class CycleLift{
           self = null;
           try{
             final result = call.step();
+            __.log().blank('step $result');
             switch(result.state){
               case CYCLE_STOP : 
                 cont = false;
