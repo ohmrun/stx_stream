@@ -54,7 +54,7 @@ typedef WorkDef = Null<Cycle>;
   }
 }
 class WorkLift{
-  static public function lift(self:WorkDef):Work return Work.lift(self);
+  @:noUsing static public function lift(self:WorkDef):Work return Work.lift(self);
 
   static public function seq(self:Work,that:Work):Work{
     //__.log().trace('work seq setup $self $that');

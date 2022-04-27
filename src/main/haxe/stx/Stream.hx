@@ -21,7 +21,7 @@ typedef StreamDef<T,E>                          = Signal<Chunk<T,E>>;
 @:using(stx.Stream.StreamLift)
 @:forward(handle) abstract Stream<T,E>(StreamDef<T,E>) from StreamDef<T,E>{
   public function new(self) this = self;
-  static public function lift<T,E>(self:StreamDef<T,E>):Stream<T,E> return new Stream(self);
+  @:noUsing static public function lift<T,E>(self:StreamDef<T,E>):Stream<T,E> return new Stream(self);
   
   //static public function trigger<T,E>():
   static public function fromArray<T,E>(self:Array<T>):Stream<T,E>{
@@ -47,7 +47,7 @@ typedef StreamDef<T,E>                          = Signal<Chunk<T,E>>;
       )
     );
   }
-  static public function pure<T,E>(self:T):Stream<T,E>{
+  @:noUsing static public function pure<T,E>(self:T):Stream<T,E>{
     return lift(
       Signal.make(
         cb -> {
@@ -80,7 +80,7 @@ typedef StreamDef<T,E>                          = Signal<Chunk<T,E>>;
       )
     );
   }
-  static public function make<T,E>(f:(fire:Chunk<T,E>->Void)->CallbackLink, ?init:OwnedDisposable->Void):Stream<T,E>{
+  @:noUsing static public function make<T,E>(f:(fire:Chunk<T,E>->Void)->CallbackLink, ?init:OwnedDisposable->Void):Stream<T,E>{
     return lift(new TinkSignal(f,init));
   }
   public function map<Ti>(fn:T->Ti):Stream<Ti,E>{
@@ -208,7 +208,7 @@ class StreamLift{
   static public function next<T,E>(self:Stream<T,E>):Future<Chunk<T,E>>{
     return self.prj().nextTime();
   }
-  static public function errata<T,E,EE>(self:Stream<T,E>,fn:Rejection<E>->Rejection<EE>):Stream<T,EE>{
+  static public function errata<T,E,EE>(self:Stream<T,E>,fn:Refuse<E>->Refuse<EE>):Stream<T,EE>{
     return lift(self.prj().map(
       chk -> chk.errata(fn)
     ));

@@ -2,7 +2,7 @@ package stx.stream;
 
 abstract Window<T,E>(WindowCls<T,E>) from WindowCls<T,E>{
   public function new(self) this = self;
-  static public function lift<T,E>(self:WindowCls<T,E>):Window<T,E> return new Window(self);
+  @:noUsing static public function lift<T,E>(self:WindowCls<T,E>):Window<T,E> return new Window(self);
   @:noUsing static public function make<T,E>(delegate:Signal<Chunk<T,E>>,?buffer:Buffer<Chunk<T,E>>){
     return lift(new WindowCls(delegate,buffer));
   }
