@@ -145,13 +145,14 @@ class CycleLift{
     __.assert().exists(that);
     #end
     var l = self.step();
-    var r = self.step();
+    var r = that.step();
   
+    //trace('$l$r');
     return switch([l.state,r.state]){
       case [CYCLE_STOP,CYCLE_STOP] : Cycler.unit();
       case [CYCLE_NEXT,CYCLE_STOP] : Cycler.pure(l.value);
       case [CYCLE_STOP,CYCLE_NEXT] : Cycler.pure(r.value);
-      case [CYCLE_NEXT,CYCLE_NEXT] : Cycler.pure(l.value.merge(r.value,seq));
+      case [CYCLE_NEXT,CYCLE_NEXT] : Cycler.pure(l.value.merge(r.value,par));
     }
   }
   static public function submit(self:Cycle,?pos:Pos){

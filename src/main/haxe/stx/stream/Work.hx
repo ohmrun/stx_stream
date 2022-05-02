@@ -74,7 +74,7 @@ class WorkLift{
         case [null,null] : null;
         case [x,null]    : x;
         case [null,y]    : y;
-        case [x,y]       : x.par(y);
+        case [x,y]       : (x:Cycle).par((y:Cycle));
       }
     );
   }
