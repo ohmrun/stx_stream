@@ -2,7 +2,8 @@
   "build" : {
     "-cp" : "src/main/haxe",
     "-lib" : [
-      "stx_pico","stx_nano", "stx_ds", "stx_assert", "stx_fn", "stx_test", "stx_log","stx_log","stx_coroutine"
+      "tink_runloop",
+      "stx_pico","stx_nano", "stx_ds", "stx_assert", "stx_fn", "stx_test", "stx_log","stx_log","stx_coroutine","spil"
     ],
     "unit"  : {
       "--macro" : [
@@ -15,6 +16,12 @@
     },
     "main" : {
       "-main" : "Main",
+      "interp" : {
+        "--interp" : true
+      }
+    },
+    "bootstrap" : {
+      "-main" : "Bootstrap",
       "interp" : {
         "--interp" : true
       }

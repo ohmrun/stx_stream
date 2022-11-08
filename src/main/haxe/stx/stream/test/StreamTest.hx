@@ -1,6 +1,6 @@
 package stx.stream.test;
 
-class StreamTest extends Clazz{
+class StreamTest extends TestCase{
 	public function test(){
 		final a = Stream.fromFuture(Future.delay(300,() -> 1));
 		final b = (i:Int) -> Stream.fromArray([1,2,3,4]);

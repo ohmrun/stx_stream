@@ -27,6 +27,9 @@ typedef StreamDef<T,E>                          = Signal<Chunk<T,E>>;
   static public function fromArray<T,E>(self:Array<T>):Stream<T,E>{
     return lift(Signal.fromArray(self.map(Val).snoc(End())));
   }
+  static public function fromCluster<T,E>(self:Cluster<T>):Stream<T,E>{
+    return lift(Signal.fromArray(self.map(Val).snoc(End()).prj()));
+  }
   static public function fromFuture<T,E>(self:Future<T>):Stream<T,E>{
     return fromThunkFuture(() -> self);
   }

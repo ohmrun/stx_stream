@@ -117,7 +117,7 @@ class PureCyclerCls extends CyclerCls{
     return this != null;
   }
   public function toString(){
-    return 'Cycle(${is_defined()})';
+    return 'Cycle(${this.state})';
   }
 }
 class CycleLift{
@@ -125,7 +125,7 @@ class CycleLift{
 
   static public function seq(self:Cycle,that:Cycle):Cycle{
     #if debug
-      //__.log().trace('seq setup $self $that');
+      __.log().trace('seq setup $self $that');
     #end
     return switch([self.is_defined(),that.is_defined()]){
       case [false,false]    : Cycle.unit();
@@ -145,51 +145,19 @@ class CycleLift{
     __.assert().exists(that);
     #end
     var l = self.step();
-    var r = self.step();
+    var r = that.step();
   
+    //trace('$l$r');
     return switch([l.state,r.state]){
       case [CYCLE_STOP,CYCLE_STOP] : Cycler.unit();
       case [CYCLE_NEXT,CYCLE_STOP] : Cycler.pure(l.value);
       case [CYCLE_STOP,CYCLE_NEXT] : Cycler.pure(r.value);
-      case [CYCLE_NEXT,CYCLE_NEXT] : Cycler.pure(l.value.merge(r.value,seq));
+      case [CYCLE_NEXT,CYCLE_NEXT] : Cycler.pure(l.value.merge(r.value,par));
     }
   }
   static public function submit(self:Cycle,?pos:Pos){
-    __.log().info('cycle/submit: $self $pos');
-    var event : haxe.MainLoop.MainEvent = null;
-        event = haxe.MainLoop.add(
-          () -> {
-            __.log().trace('tick: $self');
-            if(self != null){
-              try{
-                var thiz = self;
-                __.log().trace(thiz.toString());
-                self = null;
-                var step = thiz.step();
-                __.log().trace(_ -> _.thunk(()  -> step.state));
-                switch(step.state){
-                  case CYCLE_STOP : 
-                      event.stop();
-                  case CYCLE_NEXT :
-                    //__.log().trace('next');
-                    step.value.handle(
-                      x -> {
-                        __.log().trace("set step");
-                        self = x;
-                      }
-                    );
-                }
-              }catch(e:Dynamic){
-                event.stop();
-                haxe.MainLoop.runInMainThread(
-                  () -> {
-                    throw(e);
-                  }
-                );
-              }
-            }
-          }
-        );
+    __.log().info('cycle/submit: $self ${(pos:Position)}');
+    stx.stream.scheduler.Tink.apply(self,pos);
   }
   //TODO backoff algo
   static public function crunch(self:Cycle){

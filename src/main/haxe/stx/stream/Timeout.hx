@@ -1,9 +1,9 @@
 package stx.stream;
 
 @:forward abstract Timeout(Future<Noise>){
-  public function new(ms:Int){
+  public function new(ms:Int=10){
     final id = __.uuid('xxxx');
-    __.log().trace('timeout#$id: $ms');
+    __.log().trace('timeout#${id}: ${ms}');
     final multiplier = 1.01;
     function step(time:Int){
       return Math.round(time * multiplier);

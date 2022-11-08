@@ -11,5 +11,5 @@
 -lib stx_pkg
 -lib stx_coroutine
 -lib haxe-concurrent
-
+-lib tink_runloop
 --interp

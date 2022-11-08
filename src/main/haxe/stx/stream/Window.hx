@@ -56,7 +56,7 @@ class WindowCls<T,E>{
         delegate.handle(handler);
     }
     
-      partial.source(() -> Future.sync(Right(Stop)))
+      partial.source(() -> Future.irreversible((cb) -> cb(Right(Stop))))
              .emiter(_ -> End())
              .secure(Secure.handler(handler))
              .run()

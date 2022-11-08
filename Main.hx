@@ -4,8 +4,6 @@ using stx.Pico;
 using tink.CoreApi;
 using stx.stream.Logging;
 using stx.Stream;
-using stx.Test;
-
 import stx.stream.Test;
 
 class Main {
@@ -22,9 +20,5 @@ class Main {
 		for(include in includes){
 			logger.includes.push(include);
 		}
-				
-
-		stx.stream.Test.main();
-
 	}
 }
