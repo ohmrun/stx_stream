@@ -33,9 +33,9 @@ abstract class CyclerCls implements CyclerApi{
   }
 }
 class AnonCyclerCls extends CyclerCls{
-  final method : Void -> Future<Cycle>;
-  public function new(method){
-    this.method = method.cache();
+  final method : Void -> Null<Future<Cycle>>;
+  public function new(method:Void -> Null<Future<Cycle>>){
+    this.method = method;
   }
   public function get_value(){
     return this.method();
@@ -101,6 +101,9 @@ class PureCyclerCls extends CyclerCls{
   }
   static public inline function unit():Cycle{
     return lift(Cycler.unit());
+  }
+  static public inline function anon(f:Void->Null<Future<Cycle>>):Cycle{
+    return lift(new AnonCyclerCls(f));
   }
   @:from static public inline function fromFutureCycle(self:Future<Cycle>):Cycle{
     return lift(
