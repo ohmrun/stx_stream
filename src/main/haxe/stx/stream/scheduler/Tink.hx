@@ -15,18 +15,21 @@ class Tink{
     // );
     switch(self.toCyclerApi().state){
       case CYCLE_NEXT :
-        trace('work');
+        __.log().trace('work');
         worker.work(
           Task.ofFunction(function task(){
-            trace('task');
+            __.log().trace('task: $self');
+            if(self == null) {
+              return;
+            }
             final api = self.toCyclerApi();
-            trace('task ${api.state} ${api.value}');
+            __.log().trace('task ${api.state} ${api.value}');
             switch(api.state){
               case CYCLE_NEXT :
                 switch(api.value){
                   case null : throw 'error';
                   case x    : 
-                    trace('x $x bindings $bindings');
+                    __.log().trace('x $x bindings $bindings');
                     function next(x){
                       __.log().trace('handled ${(pos:Position)}');
                         self = x;
@@ -73,11 +76,11 @@ private class CycleTask implements TaskObject{
     this.actual_state = Canceled;
   }
   public function perform():Void{
-    trace('perform ${this.state} ${cycle.toCyclerApi().state}');
+    __.log().trace('perform ${this.state} ${cycle.toCyclerApi().state}');
     switch(this.state){
       case Busy    : 
       case Pending :
-        trace(cycle.toCyclerApi().state);
+        __.log().trace('${cycle.toCyclerApi().state}');
         switch(cycle.toCyclerApi().state){
           case CYCLE_STOP : 
             this.actual_state = Performed;
@@ -97,7 +100,7 @@ private class CycleTask implements TaskObject{
                           case CYCLE_NEXT : Pending;
                           default         : Performed;
                         }
-                        trace('next: ${this.state}');
+                        __.log().trace('next: ${this.state}');
     
                       }
                     ); 
