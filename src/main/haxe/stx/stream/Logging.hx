@@ -6,7 +6,7 @@ class Logging{
       #if stx.stream.switches.debug
         stx.Log.pkg(__.pkg());
       #else
-        stx.Log.void();
+        stx.Log.empty();
       #end
   }
 }

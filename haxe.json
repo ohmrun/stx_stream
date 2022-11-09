@@ -1,5 +1,6 @@
 {
   "build" : {
+    "-D"  : ["no-deprecation-warnings"],
     "-cp" : "src/main/haxe",
     "-lib" : [
       "tink_runloop",

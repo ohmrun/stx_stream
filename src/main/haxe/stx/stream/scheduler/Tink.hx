@@ -26,7 +26,7 @@ class Tink{
                 switch(api.value){
                   case null : throw 'error';
                   case x    : 
-                    trace(bindings);
+                    trace('x $x bindings $bindings');
                     function next(x){
                       __.log().trace('handled ${(pos:Position)}');
                         self = x;
@@ -38,10 +38,10 @@ class Tink{
                       next(x);
                     }
                     if(bindings > 0){
-                      __.log().trace('handling ${(pos:Position)}');
+                      __.log().trace('handling $x at ${(pos:Position)}');
                       x.handle(next);  
                     }else{
-                      __.log().trace('binding ${(pos:Position)}');
+                      __.log().trace('binding $x at ${(pos:Position)}');
                       bindings = bindings+1;
                       x.handle(worker.bind(unbind));
                     }
@@ -52,26 +52,6 @@ class Tink{
         );
       default : 
     }
-    // function step(){
-    //   trace(task.state);
-    //   switch(task.state){
-    //     case Busy : 
-    //       switch(self.toCyclerApi().value){
-    //         case null  : throw 'empty cycle';
-    //         case x     : 
-    //           x.handle(
-    //             worker.bind((_) -> {
-    //               trace('bound');
-    //               step();
-    //             })
-    //           );
-    //       }
-    //     case Pending  : 
-    //       worker.work(task);
-    //     default       : 
-    //   }
-    // }
-    // step();
   }
 }
 private class CycleTask implements TaskObject{
