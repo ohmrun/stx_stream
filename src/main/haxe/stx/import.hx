@@ -5,6 +5,7 @@ using tink.CoreApi;
 using stx.Nano;
 using stx.Fail;
 using stx.Log;
+using stx.stream.Logging;
 using stx.Pico;
 using stx.Pkg;
 using stx.Fn;

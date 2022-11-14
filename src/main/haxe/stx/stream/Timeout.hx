@@ -2,9 +2,12 @@ package stx.stream;
 
 @:forward abstract Timeout(Future<Noise>){
   public function new(ms:Int=10){
-    final ft    = Future.trigger();
-    stx.pico.Delay.comply(() -> { ft.trigger(Noise);},ms);
-    this = ft.asFuture();
+    this = new Future(
+      cb -> {
+        final delay = stx.pico.Delay.comply(() -> { cb(Noise);},ms);
+        return delay.cancel;
+      }
+    );
   }
   public function prj():Future<Noise>{
     return this;

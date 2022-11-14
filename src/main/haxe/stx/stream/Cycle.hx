@@ -1,5 +1,7 @@
 package stx.stream;
 
+using stx.stream.Logging;
+
 enum CYCLED{
   CYCLED;
 }
@@ -17,8 +19,15 @@ interface CyclerApi{
 
   public function toString():String;
   public function toCyclerApi():CyclerApi;
+
+  public final uuid : String;
 }
 abstract class CyclerCls implements CyclerApi{
+  public final uuid : String;
+  public function new(){
+    this.uuid = __.uuid("xxxxx");
+  }
+  
   public var state(get,null)            : CycleState;
   abstract public function get_state()  : CycleState;
 
@@ -26,7 +35,8 @@ abstract class CyclerCls implements CyclerApi{
   abstract public function get_value()  : Null<Future<Cycle>>;
 
   public inline function toString(){
-    return 'Cycler($state:$value)';
+    final type = __.definition(this).identifier();
+    return '$type[$uuid]($state:$value)';
   } 
   public function toCyclerApi():CyclerApi{
     return this;
@@ -35,7 +45,8 @@ abstract class CyclerCls implements CyclerApi{
 class AnonCyclerCls extends CyclerCls{
   final method : Void -> Null<Future<Cycle>>;
   public function new(method:Void -> Null<Future<Cycle>>){
-    this.method = method;
+    super();
+    this.method = Thunk.lift(method).cache().prj();
   }
   public function get_value(){
     return this.method();
@@ -44,8 +55,13 @@ class AnonCyclerCls extends CyclerCls{
     return this.value == null ? CYCLE_STOP : CYCLE_NEXT;
   }
 }
+/**
+  TODO remove state
+**/
 class UnitCyclerCls extends CyclerCls{
-  public function new(){}
+  public function new(){
+    super();
+  }
   public function get_value(){
     return null;
   }
@@ -55,6 +71,7 @@ class UnitCyclerCls extends CyclerCls{
 }
 class PureCyclerCls extends CyclerCls{
   public function new(value){
+    super();
     this.value = value;
   }
   public function get_value(){
@@ -120,7 +137,8 @@ class PureCyclerCls extends CyclerCls{
     return this != null;
   }
   public function toString(){
-    return 'Cycle(${this.state})';
+    final type = __.definition(this).identifier();
+    return '$type[${this.uuid}](${this.state:${this.value}})';
   }
 }
 class CycleLift{
@@ -128,7 +146,8 @@ class CycleLift{
 
   static public function seq(self:Cycle,that:Cycle):Cycle{
     #if debug
-      __.log().trace('seq setup $self $that');
+      __.log().debug('seq setup $self $that');
+      __.log().trace('${self.is_defined()} ${that.is_defined()}');
     #end
     return switch([self.is_defined(),that.is_defined()]){
       case [false,false]    : Cycle.unit();
@@ -136,8 +155,19 @@ class CycleLift{
       case [true,false]     : self;
       case [true,true]      : 
         final next = self.step(); 
+        __.log().debug('${next.state}');
         switch(next.state){
-          case CYCLE_NEXT : new Cycle(Cycler.pure(next.value.map(seq.bind(_,that))));
+          case CYCLE_NEXT : new Cycle(
+            Cycler.pure(
+              next.value
+              .map(
+                x -> {
+                  __.log().trace('$x');
+                  return x;
+                }
+              ).map(seq.bind(_,that))
+            )
+          );
           case CYCLE_STOP : that;
         }
     }

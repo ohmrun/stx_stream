@@ -6,6 +6,7 @@ import tink.RunLoop;
 class Tink{
   static var bindings = 0;
   static public function apply(self:Cycle,?pos:Pos){
+    __.log().trace("!!!!!!!!!!!!!!!!!!!!!!TINK.APPLY!!!!!!!!!!!!!!!!!!!!!!1!");
     __.log().trace('Tink.apply ${(pos:Position)} $self');
     final worker    = RunLoop.current;
     // self.toCyclerApi().value.handle(
@@ -101,7 +102,6 @@ private class CycleTask implements TaskObject{
                           default         : Performed;
                         }
                         __.log().trace('next: ${this.state}');
-    
                       }
                     ); 
                 }
