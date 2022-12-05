@@ -14,11 +14,14 @@ class Tink{
     //     trace(x);
     //   }
     // );
+    //final latch = worker.bind((cb) -> cb(Noise));
     switch(self.toCyclerApi().state){
       case CYCLE_NEXT :
         __.log().trace('work');
         worker.work(
           Task.ofFunction(function task(){
+            //latch.invoke((x) -> {});
+            trace('working here');
             __.log().trace('task: $self');
             if(self == null) {
               return;
