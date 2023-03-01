@@ -13,15 +13,15 @@
     "version": "0.1.1",
     "url": "https://github.com/ohmrun/stx_stream",
     "dependencies": {
-        "tink_core"     : "git:https://github.com/haxetink/tink_core.git",
+        "tink_core"     : "",
         "tink_runloop"  : "https://github.com/haxetink/tink_runloop.git",
-        "stx_pico"      : "git:https://github.com/ohmrun/stx_pico.git",
-        "stx_fn"        : "git:https://github.com/ohmrun/stx_fn.git",
-        "stx_nano"      : "git:https://github.com/ohmrun/stx_nano.git",
-        "stx_log"       : "git:https://github.com/ohmrun/stx_log.git",
-        "stx_assert"    : "git:https://github.com/ohmrun/stx_assert.git",
-        "stx_pkg"       : "git:https://github.com/ohmrun/stx_pkg.git",
-        "stx_coroutine" : "git:https://github.com/ohmrun/stx_coroutine.git"
+        "stx_pico"      : "",
+        "stx_fn"        : "",
+        "stx_nano"      : "",
+        "stx_log"       : "",
+        "stx_assert"    : "",
+        "stx_pkg"       : "",
+        "stx_coroutine" : ""
     },
     "classPath": "src/main/haxe"
 }
