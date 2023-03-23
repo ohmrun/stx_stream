@@ -1,5 +1,8 @@
 package stx.stream;
 
+import tink.core.Future;
+import tink.core.Noise;
+
 @:forward abstract Timeout(Future<Noise>){
   public function new(ms:Int=10){
     this = new Future(

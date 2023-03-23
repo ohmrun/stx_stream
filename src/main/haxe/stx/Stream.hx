@@ -1,10 +1,16 @@
 package stx;
 
+import tink.core.Future;
 import tink.core.Callback;
 import tink.core.Disposable;
 import tink.core.Signal in TinkSignal;
 
 using stx.stream.Logging;
+
+using stx.Pico;
+using stx.Fail;
+using stx.Nano;
+using stx.stream.Core;
 
 typedef Timeout                                 = stx.stream.Timeout;
 typedef Work                                    = stx.stream.Work;
@@ -16,7 +22,7 @@ typedef Cycler                                  = stx.stream.Cycle.Cycler;
 typedef Window<T,E>                             = stx.stream.Window<T,E>;
 typedef Buffer<T>                               = stx.stream.Buffer<T>;
 
-typedef StreamDef<T,E>                          = Signal<Chunk<T,E>>;
+typedef StreamDef<T,E>                          = TinkSignal<Chunk<T,E>>;
 
 @:using(stx.Stream.StreamLift)
 @:forward(handle) abstract Stream<T,E>(StreamDef<T,E>) from StreamDef<T,E>{
