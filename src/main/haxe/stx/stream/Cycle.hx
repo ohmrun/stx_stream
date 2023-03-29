@@ -180,8 +180,9 @@ class CycleLift{
     __.assert().exists(that);
     #end
     var l = self.step();
+        l.value;
     var r = that.step();
-  
+        r.value;
     //trace('$l$r');
     return switch([l.state,r.state]){
       case [CYCLE_STOP,CYCLE_STOP] : Cycler.unit();
