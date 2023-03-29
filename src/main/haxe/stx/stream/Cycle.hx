@@ -168,7 +168,9 @@ class CycleLift{
               ).map(seq.bind(_,that))
             )
           );
-          case CYCLE_STOP : that;
+          case CYCLE_STOP : 
+            next.value;//Run the lazy getter in case it's an error inside
+            that;
         }
     }
   }
