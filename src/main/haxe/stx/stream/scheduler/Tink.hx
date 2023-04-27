@@ -34,12 +34,12 @@ class Tink{
                   case null : throw 'error';
                   case x    : 
                     __.log().trace('x $x bindings $bindings');
-                    function next(x){
-                      __.log().trace('handled ${(pos:Position)}');
+                    function next(x:Cycle){
+                      __.log().trace('handled ${(pos:Position)} for $task');
                         self = x;
                         worker.work(task);
                     }
-                    function unbind(x){
+                    function unbind(x:Cycle){
                       __.log().trace('unbound ${(pos:Position)}');
                       bindings = bindings-1;
                       next(x);

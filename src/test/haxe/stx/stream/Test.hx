@@ -11,8 +11,9 @@ class Test{
       [
         new StreamTest(),
         new Issue1(),
+        new CycleTest()
       ],
-      []
+      [CycleTest]
     );
   }
 }

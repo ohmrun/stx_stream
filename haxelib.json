@@ -14,7 +14,6 @@
     "url": "https://github.com/ohmrun/stx_stream",
     "dependencies": {
         "tink_core"     : "",
-        "tink_runloop"  : "",
         "stx_pico"      : "",
         "stx_fn"        : "",
         "stx_nano"      : "",

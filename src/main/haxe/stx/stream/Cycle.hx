@@ -193,7 +193,7 @@ class CycleLift{
   }
   static public function submit(self:Cycle,?pos:Pos){
     __.log().info('cycle/submit: $self ${(pos:Position)}');
-    stx.stream.scheduler.Tink.apply(self,pos);
+    stx.stream.scheduler.Haxe.apply(self,pos);
   }
   //TODO backoff algo
   static public function crunch(self:Cycle){

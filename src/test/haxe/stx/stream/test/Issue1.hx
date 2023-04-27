@@ -10,9 +10,13 @@ import stx.stream.Timeout;
 
 class Issue1 extends TestCase{
   static public function main(){
-    final logger = __.log().global;
-          logger.includes.push("stx/stream");
-          logger.level = TRACE;
+    __.logger().global().configure(
+      logger -> logger.with_logic(
+        logic -> logic.or(
+          logic.tags(["stx/stream"])
+        )
+      ) 
+    );
     trace('main');
     var self = new Issue1();
         self.test();

@@ -4,7 +4,7 @@
     "-cp" : "src/main/haxe",
     "-lib" : [
       "tink_runloop",
-      "stx_pico","stx_nano", "stx_ds", "stx_assert", "stx_fn", "stx_test", "stx_log","stx_log","stx_coroutine"
+      "stx_pico","stx_nano", "stx_ds", "stx_assert", "stx_fn", "stx_log","stx_coroutine"
     ],
     "unit"  : {
       "--macro" : [
@@ -22,7 +22,12 @@
       }
     },
     "test" : {
-
+      "-cp"  : "src/test/haxe",
+      "-lib" : ["stx_test","fletcher"], 
+      "interp" : {
+        "--interp"  : true,
+       "--main"     : "stx.stream.Test"  
+      }
     },
     "bootstrap" : {
       "-main" : "Bootstrap",

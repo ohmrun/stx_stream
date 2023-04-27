@@ -1,6 +1,6 @@
 # stx_stream
 
-This is a possibly inifinite functional Stream with windowing based on coroutines running on an event loop (haxe.MainLoop)
+This is a possibly inifinite functional Stream with windowing based on coroutines running on an event loop.
 
 Usage.
 
@@ -19,24 +19,16 @@ Usage.
     }
   }
 ```
-`Stream` is a monad, with `map` and `flat_map` defined.
-
-`stx.stream.Cycle` is `Thunk<Future<Cycle>>`, a recursive type.
-
-The way `Cycle` reports that it is finished is via throwing a special constant `CYCLED`
-
-`stx.stream.Work` is an `Option<Future<Cycle>>` (which might change to `Option<Cycle>`), but allows cases where the work is done to be factored out before the scheduler invocation `None + None = None`
-
 ### Windowing
 
-The Windowing system `stream.window` is fully asyncrhonous, and by default keeps a full history of the values in memory. Overriding what the window returns and how is managed by a `stx.coroutine.Tunnel` which allows arbitrarily complex behaviours based on the input, and is integrated with `stx.Err`.
+The Windowing system `stream.window` is fully asyncrhonous, and by default keeps a full history of the values in memory. Overriding what the window returns and how is managed by a `stx.coroutine.Tunnel` which allows arbitrarily complex behaviours based on the input, and is integrated with `stx.Fail`.
 
 ### Execution
 
-Execution is started using `cycle.submit()` or `cycle.crunch()`. The latter attempts to complete execution in the current event loop frame .
+Execution is started using `cycle.submit()` or `cycle.crunch()`. The latter attempts to complete execution in the current event loop frame.
 
 ### Logging (stx.log)
-To read the logs, whitelist `stx/stream`, and set level to `TRACE` for tick data
+To read the logs, whitelist `stx/stream`, set level to `TRACE` 
 
 ```haxe
   function log_init(){
