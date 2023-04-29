@@ -1,9 +1,12 @@
 package stx.stream.scheduler;
 
+#if tink_runloop
 import tink.runloop.Task;
 import tink.RunLoop;
 
+#end
 class Tink{
+  #if tink_runloop
   static var bindings = 0;
   static public function apply(self:Cycle,?pos:Pos){
     __.log().trace("!!!!!!!!!!!!!!!!!!!!!!TINK.APPLY!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -113,4 +116,5 @@ private class CycleTask implements TaskObject{
         default : 
     }
   } 
+  #end
 }
