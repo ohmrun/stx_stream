@@ -1,18 +1,17 @@
 package stx.stream;
 
 import tink.core.Future;
-import tink.core.Noise;
 
-@:forward abstract Timeout(Future<Noise>){
+@:forward abstract Timeout(Future<Nada>){
   public function new(ms:Int=10){
     this = new Future(
       cb -> {
-        final delay = stx.pico.Delay.comply(() -> { cb(Noise);},ms);
+        final delay = stx.pico.Delay.comply(() -> { cb(Nada);},ms);
         return delay.cancel;
       }
     );
   }
-  public function prj():Future<Noise>{
+  public function prj():Future<Nada>{
     return this;
   }
 }

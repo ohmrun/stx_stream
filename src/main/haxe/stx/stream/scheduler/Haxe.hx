@@ -5,7 +5,7 @@ import haxe.MainLoop;
 class Haxe{
   static public function apply(self:Cycle,?pos:Pos){
     __.log().trace('Haxe.apply');
-    final ignition  = Future.lazy(Noise);
+    final ignition  = Future.lazy(Nada);
     var event       = null;
         event       = MainLoop.add(
           (function start(cycle:Ref<Cycle>){

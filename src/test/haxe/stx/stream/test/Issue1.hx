@@ -24,7 +24,7 @@ class Issue1 extends TestCase{
   public function test(){
     var a = new Timeout(100).prj();
     var b = new Timeout(2000).prj();
-    var c = a.merge(b,(_,_) -> Noise);
+    var c = a.merge(b,(_,_) -> Nada);
         c.handle(
           (_) -> {
             trace('done');

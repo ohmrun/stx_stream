@@ -17,7 +17,7 @@ class Tink{
     //     trace(x);
     //   }
     // );
-    //final latch = worker.bind((cb) -> cb(Noise));
+    //final latch = worker.bind((cb) -> cb(Nada));
     switch(self.toCyclerApi().state){
       case CYCLE_NEXT :
         __.log().trace('work');
