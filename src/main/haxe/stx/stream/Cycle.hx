@@ -103,7 +103,7 @@ class PureCyclerCls extends CyclerCls{
   }
 }
 @:using(stx.stream.Cycle.CycleLift)
-@:forward(toCyclerApi) abstract Cycle(CyclerApi) from CyclerApi to CyclerApi{
+@:forward(toCyclerApi,value) abstract Cycle(CyclerApi) from CyclerApi to CyclerApi{
   public function new(self:CyclerApi) {
     //__.assert().exists(self);
     this = self;

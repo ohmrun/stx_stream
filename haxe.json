@@ -22,8 +22,9 @@
       }
     },
     "test" : {
-      "-cp"  : "src/test/haxe",
-      "-lib" : ["stx_test","fletcher"], 
+      "--debug" : true,
+      "-cp"     : "src/test/haxe",
+      "-lib"    : ["stx_test","fletcher"], 
       "interp" : {
         "--interp"  : true,
        "--main"     : "stx.stream.Test"  

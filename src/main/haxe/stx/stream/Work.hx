@@ -52,9 +52,12 @@ typedef WorkDef = Null<Cycle>;
       this == null ? null : new Cycle(Cycler.pure(this.asFuture()))
     );
   }
+  static public function unit(){
+    return new Bang();
+  }
 }
 class WorkLift{
-  @:noUsing static public function lift(self:WorkDef):Work return Work.lift(self);
+  @:noUsing static inline public function lift(self:WorkDef):Work return Work.lift(self);
 
   static public function seq(self:Work,that:Work):Work{
     __.log().trace('work seq setup $self $that');
