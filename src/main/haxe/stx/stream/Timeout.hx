@@ -6,8 +6,9 @@ import tink.core.Future;
   public function new(ms:Int=10){
     this = new Future(
       cb -> {
-        final delay = stx.pico.Delay.comply(() -> { cb(Nada);},ms);
-        return delay.cancel;
+        //final delay = stx.pico.Delay.comply(() -> { cb(Nada);},ms);
+        final delay = haxe.Timer.delay(() -> { cb(Nada);},ms);
+        return delay.stop;
       }
     );
   }
