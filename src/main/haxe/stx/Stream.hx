@@ -116,7 +116,7 @@ class StreamLift{
         var cbI  = self.handle(
           (chunk) -> {
             //__.log().blank('stream:${id} log:lhs ');
-            //__.assert().exists(chunk);
+            //__.assert().that().exists(chunk);
             chunk.fold(
               val -> cb(Val(val)),
               end -> __.option(end).fold(

@@ -43,6 +43,8 @@ class Haxe{
                   __.log().trace('STOP');
                   event.stop();
                   event = MainLoop.add(next);
+                  var t = new haxe.Timer(0);
+                      t.run = t.stop;
                 }else{
                   __.log().trace('switch out cycle value ${haxe.MainLoop.hasEvents()}');
                   cycle.value = local;
@@ -50,5 +52,7 @@ class Haxe{
             };
           }).bind(self)
         );
+        var t     = new haxe.Timer(0);//https://github.com/HaxeFoundation/haxe/issues/11202
+            t.run = t.stop;
   }
 }

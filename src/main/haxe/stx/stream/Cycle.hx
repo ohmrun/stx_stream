@@ -105,11 +105,11 @@ class PureCyclerCls extends CyclerCls{
 @:using(stx.stream.Cycle.CycleLift)
 @:forward(toCyclerApi,value) abstract Cycle(CyclerApi) from CyclerApi to CyclerApi{
   public function new(self:CyclerApi) {
-    //__.assert().exists(self);
+    //__.assert().that().exists(self);
     this = self;
   }
   static private inline function lift(self:CyclerApi):Cycle{
-    //__.assert().exists(self);
+    //__.assert().that().exists(self);
     return new Cycle(self);
   }
   static public var ZERO(get,null) : Cycle;
@@ -176,8 +176,8 @@ class CycleLift{
   }
   static public function par(self:Cycle,that:Cycle):Cycle{
     #if debug
-    __.assert().exists(self);
-    __.assert().exists(that);
+    __.assert().that().exists(self);
+    __.assert().that().exists(that);
     #end
     var l = self.step();
         l.value;
