@@ -6,8 +6,8 @@ enum CYCLED{
   CYCLED;
 }
 enum abstract CycleState(UInt){
-  var CYCLE_STOP = 0;
-  var CYCLE_NEXT = 1;
+  var CYCLE_STOP   = 0;
+  var CYCLE_NEXT   = 1;
   //var CYCLE_WAIT = 2;
 }
 interface CyclerApi{
@@ -52,7 +52,7 @@ class AnonCyclerCls extends CyclerCls{
     return this.method();
   }
   public function get_state(){
-    return this.value == null ? CYCLE_STOP : CYCLE_NEXT;
+    return this.get_value() == null ? CYCLE_STOP : CYCLE_NEXT;
   }
 }
 /**
@@ -192,7 +192,7 @@ class CycleLift{
     }
   }
   static public function submit(self:Cycle,?pos:Pos){
-    __.log().info('cycle/submit: $self ${(pos:Position)}');
+    __.log().debug('cycle/submit: $self ${(pos:Position)}');
     stx.stream.scheduler.Haxe.apply(self,pos);
   }
   //TODO backoff algo

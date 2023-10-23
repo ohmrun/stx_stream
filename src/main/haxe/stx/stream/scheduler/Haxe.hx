@@ -5,10 +5,14 @@ import haxe.MainLoop;
 class Haxe{
   static public function apply(self:Cycle,?pos:Pos){
     __.log().trace('Haxe.apply');
-    final ignition  = Future.lazy(Nada);
+    final ignition                = Future.irreversible((cb) -> cb(Nada));
+    final cycle : Ref<Cycle>      = self; 
     var event       = null;
         event       = MainLoop.add(
-          (function start(cycle:Ref<Cycle>){
+          (function start(){
+            if(event!=null){
+              event.stop();
+            }
             __.log().trace('start ${cycle.value}');
             switch(cycle.value?.value){
               case null :
@@ -20,8 +24,9 @@ class Haxe{
                 function next(){
                   x.handle(
                     (x) -> {
-                      __.log().trace('start');
-                      start(x);
+                      __.log().trace('start: $x');
+                      cycle.value = x;
+                      start();
                     }
                   );
                 }
@@ -48,9 +53,11 @@ class Haxe{
                 }else{
                   __.log().trace('switch out cycle value ${haxe.MainLoop.hasEvents()}');
                   cycle.value = local;
+                  __.log().trace('cycle.value = $local');
+                  event       = MainLoop.add(start);
                 }
             };
-          }).bind(self)
+          })
         );
         var t     = new haxe.Timer(0);//https://github.com/HaxeFoundation/haxe/issues/11202
             t.run = t.stop;
