@@ -3,6 +3,7 @@ package stx.stream;
 using stx.stream.Logging;
 
 
+import tink.core.Signal;
 import tink.core.Future;
 using tink.CoreApi;
 

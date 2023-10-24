@@ -32,18 +32,18 @@ class WindowCls<T,E>{
       x -> {
         var next = this.buffer;
         __.log().trace('$next');
-        this.buffer = next;
+        this.buffer = Buffer.lift(__.emit(x,buffer));
       }
     );
   }
   public function listen(handler:Callback<Chunk<T,E>>):CallbackLink{
     var uptake    = [];//between now and when the buffer has finished.
     var canceller = null;
-    var uptaker = function(x){
+    var uptaker   = function(x){
       uptake.push(x);
     }
         canceller = this.delegate.handle(uptaker);  
-    var partial = buffer;//snapshot of data now
+    var partial   = buffer;//snapshot of data now
   
     function transfer(){
       uptaker = (_) -> {};

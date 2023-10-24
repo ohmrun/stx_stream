@@ -14,8 +14,8 @@ interface CyclerApi{
   public var state(get,null)          : CycleState;
   public function get_state()         : CycleState;
   
-  public var value(get,null)          : Null<Future<Cycle>>;
-  public function get_value()         : Null<Future<Cycle>>;
+  public var after(get,null)          : Null<Future<Cycle>>;
+  public function get_after()         : Null<Future<Cycle>>;
 
   public function toString():String;
   public function toCyclerApi():CyclerApi;
@@ -31,12 +31,12 @@ abstract class CyclerCls implements CyclerApi{
   public var state(get,null)            : CycleState;
   abstract public function get_state()  : CycleState;
 
-  public var value(get,null)            : Null<Future<Cycle>>;
-  abstract public function get_value()  : Null<Future<Cycle>>;
+  public var after(get,null)            : Null<Future<Cycle>>;
+  abstract public function get_after()  : Null<Future<Cycle>>;
 
   public inline function toString(){
     final type = __.definition(this).identifier();
-    return '$type[$uuid]($state:$value)';
+    return '$type[$uuid]($state:$after)';
   } 
   public function toCyclerApi():CyclerApi{
     return this;
@@ -48,11 +48,11 @@ class AnonCyclerCls extends CyclerCls{
     super();
     this.method = Thunk.lift(method).cache().prj();
   }
-  public function get_value(){
+  public function get_after(){
     return this.method();
   }
   public function get_state(){
-    return this.get_value() == null ? CYCLE_STOP : CYCLE_NEXT;
+    return this.get_after() == null ? CYCLE_STOP : CYCLE_NEXT;
   }
 }
 /**
@@ -62,7 +62,7 @@ class UnitCyclerCls extends CyclerCls{
   public function new(){
     super();
   }
-  public function get_value(){
+  public function get_after(){
     return null;
   }
   public function get_state(){
@@ -70,12 +70,12 @@ class UnitCyclerCls extends CyclerCls{
   }
 }
 class PureCyclerCls extends CyclerCls{
-  public function new(value){
+  public function new(after){
     super();
-    this.value = value;
+    this.after = after;
   }
-  public function get_value(){
-    return value;
+  public function get_after(){
+    return after;
   }
   public function get_state(){
     return CYCLE_NEXT;
@@ -103,7 +103,7 @@ class PureCyclerCls extends CyclerCls{
   }
 }
 @:using(stx.stream.Cycle.CycleLift)
-@:forward(toCyclerApi,value) abstract Cycle(CyclerApi) from CyclerApi to CyclerApi{
+@:forward(toCyclerApi,after) abstract Cycle(CyclerApi) from CyclerApi to CyclerApi{
   public function new(self:CyclerApi) {
     //__.assert().that().exists(self);
     this = self;
@@ -138,7 +138,7 @@ class PureCyclerCls extends CyclerCls{
   }
   public function toString(){
     final type = __.definition(this).identifier();
-    return '$type[${this.uuid}](${this.state:${this.value}})';
+    return '$type[${this.uuid}](${this.state:${this.after}})';
   }
 }
 class CycleLift{
@@ -159,7 +159,7 @@ class CycleLift{
         switch(next.state){
           case CYCLE_NEXT : new Cycle(
             Cycler.pure(
-              next.value
+              next.after
               .map(
                 x -> {
                   __.log().trace('$x');
@@ -169,7 +169,7 @@ class CycleLift{
             )
           );
           case CYCLE_STOP : 
-            next.value;//Run the lazy getter in case it's an error inside
+            next.after;//Run the lazy getter in case it's an error inside
             that;
         }
     }
@@ -180,15 +180,15 @@ class CycleLift{
     __.assert().that().exists(that);
     #end
     var l = self.step();
-        l.value;
+        l.after;
     var r = that.step();
-        r.value;
+        r.after;
     //trace('$l$r');
     return switch([l.state,r.state]){
       case [CYCLE_STOP,CYCLE_STOP] : Cycler.unit();
-      case [CYCLE_NEXT,CYCLE_STOP] : Cycler.pure(l.value);
-      case [CYCLE_STOP,CYCLE_NEXT] : Cycler.pure(r.value);
-      case [CYCLE_NEXT,CYCLE_NEXT] : Cycler.pure(l.value.merge(r.value,par));
+      case [CYCLE_NEXT,CYCLE_STOP] : Cycler.pure(l.after);
+      case [CYCLE_STOP,CYCLE_NEXT] : Cycler.pure(r.after);
+      case [CYCLE_NEXT,CYCLE_NEXT] : Cycler.pure(l.after.merge(r.after,par));
     }
   }
   static public function submit(self:Cycle,?pos:Pos){
@@ -215,7 +215,7 @@ class CycleLift{
                 cont = false;
                 null;
               case CYCLE_NEXT :
-                result.value.handle(
+                result.after.handle(
                   x -> self = x
                 );
                 null;

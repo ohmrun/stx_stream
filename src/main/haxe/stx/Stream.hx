@@ -4,6 +4,7 @@ import tink.core.Future;
 import tink.core.Callback;
 import tink.core.Disposable;
 import tink.core.Signal in TinkSignal;
+import tink.core.Signal.SignalTrigger in SignalTrigger;
 
 using stx.stream.Logging;
 
@@ -29,7 +30,9 @@ typedef StreamDef<T,E>                          = TinkSignal<Chunk<T,E>>;
   public function new(self) this = self;
   @:noUsing static public function lift<T,E>(self:StreamDef<T,E>):Stream<T,E> return new Stream(self);
   
-  //static public function trigger<T,E>():
+  static public function trigger<T,E>():StreamTrigger<T,E>{
+    return Signal.trigger();
+  }
   static public function fromArray<T,E>(self:Array<T>):Stream<T,E>{
     return lift(Signal.fromArray(self.map(Val).snoc(End())));
   }
@@ -226,5 +229,10 @@ class StreamLift{
     return lift(self.prj().map(
       chk -> chk.errate(fn)
     ));
+  }
+}
+@:forward abstract StreamTrigger<T,E>(SignalTrigger<Chunk<T,E>>) from SignalTrigger<Chunk<T,E>> to SignalTrigger<Chunk<T,E>>{
+  @:to public inline function asStream():Stream<T,E>{
+    return this.asSignal();
   }
 }
